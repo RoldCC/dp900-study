@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DP-900 Study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --border: #2a2d3e;
+      --accent: #6c63ff;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #475569;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .nav-inner::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      flex-shrink: 0;
+      padding: 14px 20px;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* LAYOUT */
+    main { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+
+    .domain { display: none; }
+    .domain.active { display: block; }
+
+    /* SECTION HEADERS */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 32px 0 12px;
+    }
+
+    /* ACCORDION */
+    .accordion { display: flex; flex-direction: column; gap: 8px; }
+
+    .acc-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .acc-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      gap: 12px;
+    }
+    .acc-trigger:hover { background: rgba(108,99,255,0.06); }
+
+    .chevron {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+      color: var(--text-muted);
+      transition: transform 0.25s;
+    }
+    .acc-item.open .chevron { transform: rotate(180deg); }
+
+    .acc-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .acc-item.open .acc-body { display: block; }
+
+    .acc-body p { color: var(--text-secondary); margin-top: 12px; font-size: 14px; }
+
+    .acc-body ul {
+      margin: 10px 0 0 4px;
+      padding-left: 18px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .acc-body ul li { margin-bottom: 4px; }
+
+    .exam-tip {
+      margin-top: 14px;
+      padding: 10px 14px;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid var(--warning);
+      border-radius: 6px;
+      font-size: 13px;
+      color: #fcd34d;
+    }
+    .exam-tip strong { color: var(--warning); }
+
+    code {
+      font-family: monospace;
+      background: rgba(108,99,255,0.15);
+      color: var(--accent);
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+
+    /* FLASHCARDS */
+    .flashcard-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card-counter {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .card-scene {
+      width: 100%;
+      max-width: 560px;
+      height: 220px;
+      perspective: 900px;
+      cursor: pointer;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.45s ease;
+    }
+    .card-scene.flipped .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      backface-visibility: hidden;
+    }
+
+    .card-front { text-align: center; }
+    .card-front .card-question {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-front .card-hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .card-back { transform: rotateY(180deg); text-align: center; }
+    .card-back .card-answer {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .card-back .card-explain {
+      margin-top: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .card-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn {
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s;
+    }
+    .btn:hover { filter: brightness(1.15); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { background: var(--surface); color: var(--text); filter: none; }
+
+    /* MIND MAP */
+    .mindmap-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .mindmap-toolbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    .mindmap-svg { display: block; width: 100%; height: 420px; }
+
+    .node-tooltip {
+      position: absolute;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      max-width: 220px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+      z-index: 20;
+    }
+
+    /* QUIZ */
+    .quiz-progress-bar {
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .quiz-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .quiz-question-num {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .quiz-question-text {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+
+    .quiz-option {
+      padding: 13px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .quiz-option:hover:not(:disabled) { background: rgba(108,99,255,0.1); border-color: var(--accent); }
+    .quiz-option.correct { background: rgba(34,197,94,0.15); border-color: var(--success); color: var(--success); }
+    .quiz-option.wrong { background: rgba(239,68,68,0.15); border-color: var(--danger); color: var(--danger); }
+    .quiz-option:disabled { cursor: default; }
+
+    .quiz-explanation {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: rgba(108,99,255,0.08);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: none;
+    }
+
+    .quiz-next { margin-top: 16px; display: none; }
+
+    .quiz-result {
+      text-align: center;
+      padding: 32px 16px;
+      display: none;
+    }
+    .quiz-result .score { font-size: 48px; font-weight: 600; color: var(--accent); }
+    .quiz-result .score-label { color: var(--text-secondary); margin-top: 6px; font-size: 14px; }
+    .quiz-result .wrong-list { margin: 20px 0; text-align: left; }
+    .quiz-result .wrong-list li { margin-bottom: 8px; color: var(--text-secondary); font-size: 14px; }
+
+    /* UTIL */
+    .mt-8 { margin-top: 8px; }
+    .mt-16 { margin-top: 16px; }
+
+    @media (max-width: 420px) {
+      .tab-btn { padding: 12px 14px; font-size: 13px; }
+      .card-scene { height: 200px; }
+      .card-front .card-question { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <button class="tab-btn active" data-tab="core">Core</button>
+    <button class="tab-btn" data-tab="relational">Relational</button>
+    <button class="tab-btn" data-tab="nonrelational">Non-Relational</button>
+    <button class="tab-btn" data-tab="analytics">Analytics</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ===== CORE DATA CONCEPTS ===== -->
+  <section class="domain active" id="core">
+
+    <p class="section-label">Summary</p>
+    <div class="accordion">
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Data Formats
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Data is classified as <strong>structured</strong> (tables with fixed schema), <strong>semi-structured</strong> (JSON, XML, YAML — self-describing but flexible), or <strong>unstructured</strong> (images, video, documents — no defined schema).</p>
+          <ul>
+            <li>Structured → relational databases, spreadsheets</li>
+            <li>Semi-structured → JSON APIs, log files, NoSQL stores</li>
+            <li>Unstructured → blob/object storage, data lakes</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Semi-structured data is NOT unstructured — it has an implied structure via tags or key-value pairs.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          File Formats
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Common file formats serve different purposes. <strong>CSV</strong> is row-based and human-readable. <strong>JSON</strong> and <strong>XML</strong> are hierarchical. <strong>Parquet</strong> and <strong>Avro</strong> are binary columnar/row formats optimised for analytics. <strong>Delta Lake</strong> adds ACID transactions on top of Parquet files.</p>
+          <ul>
+            <li>Parquet: columnar, high compression, fast analytical queries</li>
+            <li>Avro: row-based binary, good for streaming (schema in header)</li>
+            <li>ORC: columnar, used in Hive/Hadoop ecosystems</li>
+            <li>Delta Lake: Parquet + transaction log (ACID on data lakes)</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Parquet is columnar — ideal for reading a few columns from millions of rows. CSV/JSON/Avro are row-based.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Databases: Relational vs Non-Relational
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Relational databases store data in normalised tables linked by foreign keys, enforcing a fixed schema and supporting SQL. Non-relational (NoSQL) databases trade schema rigidity for flexibility and horizontal scale, using key-value, document, column-family, or graph models.</p>
+          <ul>
+            <li>Relational: strong consistency, ACID, joins, SQL</li>
+            <li>Key-value: ultra-fast lookups by primary key (e.g. Azure Table Storage)</li>
+            <li>Document: JSON/BSON documents, flexible schema (e.g. Cosmos DB NoSQL API)</li>
+            <li>Column-family: wide rows, sparse data (e.g. Cosmos DB Cassandra API)</li>
+            <li>Graph: entities as nodes, relationships as edges (e.g. Cosmos DB Gremlin API)</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Know which NoSQL model fits which use case — graph for social networks, key-value for caches, document for catalogues.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Transactional Processing (OLTP)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>OLTP systems handle high-volume, short-duration transactions — inserts, updates, deletes. They enforce <strong>ACID</strong> properties to guarantee data integrity even with concurrent users.</p>
+          <ul>
+            <li><strong>A</strong>tomicity — all operations in a transaction succeed or all fail</li>
+            <li><strong>C</strong>onsistency — data always moves between valid states</li>
+            <li><strong>I</strong>solation — concurrent transactions don't interfere</li>
+            <li><strong>D</strong>urability — committed data survives failures</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> OLTP = row-oriented, many small transactions, normalised schema. Optimise for write speed and concurrency.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Analytical Processing (OLAP)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>OLAP systems are optimised for complex queries over large historical datasets, supporting business intelligence and reporting. Data is loaded via ETL/ELT pipelines from OLTP sources into data warehouses or data lakes.</p>
+          <ul>
+            <li>ETL: Extract → Transform → Load (transform before loading)</li>
+            <li>ELT: Extract → Load → Transform (transform in-place, common with cloud DWs)</li>
+            <li>Data warehouse: structured, schema-on-write, fast BI queries</li>
+            <li>Data lake: raw data (any format), schema-on-read, flexible</li>
+            <li>Data lakehouse: combines lake storage with warehouse query performance</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> OLAP ≠ OLTP. OLAP reads large datasets for analysis; OLTP writes small transactions for operations.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Batch vs Stream Processing
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p><strong>Batch processing</strong> collects and processes data in scheduled groups (high latency, high throughput). <strong>Stream processing</strong> processes data continuously as it arrives (low latency, event-by-event or micro-batch).</p>
+          <ul>
+            <li>Batch: nightly ETL jobs, billing runs, monthly reports</li>
+            <li>Stream: fraud detection, IoT telemetry, real-time dashboards</li>
+            <li>Lambda architecture: combines both layers</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Azure Stream Analytics processes streaming data in real-time. Azure Data Factory is batch-oriented.</div>
+        </div>
+      </div>
+
+    </div><!-- /accordion -->
+
+    <p class="section-label">Flashcards</p>
+    <div class="flashcard-wrapper" id="fc-core">
+      <div class="card-counter" id="fc-core-counter">Card 1 of 12</div>
+      <div class="card-scene" id="fc-core-scene">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-question" id="fc-core-q">What are the three data classifications?</div>
+            <div class="card-hint">Click to reveal</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-answer" id="fc-core-a">Structured, Semi-structured, Unstructured</div>
+            <div class="card-explain" id="fc-core-e">Structured = fixed schema tables; Semi-structured = JSON/XML; Unstructured = images/video</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-controls">
+        <button class="btn btn-ghost" id="fc-core-prev">← Prev</button>
+        <button class="btn btn-ghost" id="fc-core-shuffle">Shuffle</button>
+        <button class="btn btn-ghost" id="fc-core-next">Next →</button>
+      </div>
+    </div>
+
+    <p class="section-label">Mind Map</p>
+    <div class="mindmap-container" id="mm-core-container">
+      <div class="mindmap-toolbar">
+        <button class="btn btn-ghost" id="mm-core-fit" style="font-size:12px;padding:6px 12px;">Fit</button>
+      </div>
+      <svg class="mindmap-svg" id="mm-core-svg"></svg>
+      <div class="node-tooltip" id="mm-core-tooltip"></div>
+    </div>
+
+    <p class="section-label">Quiz</p>
+    <div id="quiz-core">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpf-core"></div></div>
+      <div id="quiz-core-q">
+        <div class="quiz-question-num" id="qnum-core">Question 1 of 5</div>
+        <div class="quiz-question-text" id="qtext-core"></div>
+        <div class="quiz-options" id="qopts-core"></div>
+        <div class="quiz-explanation" id="qexp-core"></div>
+        <button class="btn quiz-next" id="qnext-core">Next →</button>
+      </div>
+      <div class="quiz-result" id="qresult-core">
+        <div class="score" id="qscore-core"></div>
+        <div class="score-label">questions correct</div>
+        <ul class="wrong-list" id="qwrong-core"></ul>
+        <button class="btn" id="qretry-core">Retry</button>
+      </div>
+    </div>
+
+  </section><!-- /core -->
+
+  <!-- ===== RELATIONAL DATA ===== -->
+  <section class="domain" id="relational">
+
+    <p class="section-label">Summary</p>
+    <div class="accordion">
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Relational Data Fundamentals
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Relational databases store data in tables (relations) composed of rows and columns. Tables are linked by <strong>foreign keys</strong> referencing <strong>primary keys</strong> in other tables. Normalisation reduces redundancy by organising data into related tables.</p>
+          <ul>
+            <li>Primary key: uniquely identifies each row</li>
+            <li>Foreign key: links rows between tables</li>
+            <li>Index: speeds up queries at the cost of write overhead</li>
+            <li>View: saved query treated as a virtual table</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Normalisation removes duplicate data. Denormalisation (e.g. in star schema) trades redundancy for query speed.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          SQL: DDL, DML, DCL
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>SQL is divided into statement groups based on what they do: DDL defines structure, DML manipulates data, DCL controls permissions.</p>
+          <ul>
+            <li><code>CREATE</code>, <code>ALTER</code>, <code>DROP</code> → DDL (Data Definition Language)</li>
+            <li><code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code> → DML (Data Manipulation Language)</li>
+            <li><code>GRANT</code>, <code>REVOKE</code>, <code>DENY</code> → DCL (Data Control Language)</li>
+            <li><code>BEGIN TRAN</code>, <code>COMMIT</code>, <code>ROLLBACK</code> → TCL (Transaction Control)</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> <code>DROP TABLE</code> is DDL — it removes the table definition. <code>DELETE</code> is DML — it removes rows but keeps the table.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure SQL Database (PaaS)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure SQL Database is a fully managed PaaS database engine built on SQL Server. Microsoft handles patching, backups, and high availability. It supports serverless compute and elastic pools for cost optimisation.</p>
+          <ul>
+            <li>Deployment: Single Database or Elastic Pool</li>
+            <li>Compute: Provisioned or Serverless (auto-pause)</li>
+            <li>99.99% SLA, built-in geo-redundant backups</li>
+            <li>Hyperscale tier: up to 100 TB, fast scaling</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Azure SQL Database is PaaS — you manage data and schema, Azure manages the OS, patches, and hardware.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure SQL Managed Instance
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>SQL Managed Instance is a fully managed PaaS service that provides near-100% compatibility with on-premises SQL Server. It supports features SQL Database lacks: SQL Server Agent, cross-database queries, Service Broker, linked servers.</p>
+          <ul>
+            <li>Best for: lift-and-shift migrations from on-premises SQL Server</li>
+            <li>Deployed in a VNet — private network access</li>
+            <li>Supports SQL Server Agent jobs</li>
+            <li>Instance-scoped features unavailable in Azure SQL Database</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> If the scenario involves migrating an existing SQL Server with minimal code changes, the answer is usually SQL Managed Instance.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          SQL Server on Azure VMs (IaaS)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>SQL Server on Azure VMs is IaaS — you run SQL Server on a virtual machine you control. Full OS and SQL Server access. Microsoft provides automated backup and patching assistance but you own the infrastructure.</p>
+          <ul>
+            <li>Full control: OS, SQL Server version, custom configurations</li>
+            <li>Supports all SQL Server features (including legacy)</li>
+            <li>Best for: apps needing OS-level access or specific SQL Server versions</li>
+            <li>You manage: patching, backups, HA, scaling</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> IaaS = you manage the VM. PaaS (SQL DB, MI) = Azure manages the infrastructure. SaaS = everything managed for you.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="section-label">Flashcards</p>
+    <div class="flashcard-wrapper" id="fc-relational">
+      <div class="card-counter" id="fc-relational-counter">Card 1 of 10</div>
+      <div class="card-scene" id="fc-relational-scene">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-question" id="fc-relational-q">What SQL statement removes a table entirely?</div>
+            <div class="card-hint">Click to reveal</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-answer" id="fc-relational-a">DROP TABLE</div>
+            <div class="card-explain" id="fc-relational-e">DDL statement — removes table definition and all its data permanently.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-controls">
+        <button class="btn btn-ghost" id="fc-relational-prev">← Prev</button>
+        <button class="btn btn-ghost" id="fc-relational-shuffle">Shuffle</button>
+        <button class="btn btn-ghost" id="fc-relational-next">Next →</button>
+      </div>
+    </div>
+
+    <p class="section-label">Mind Map</p>
+    <div class="mindmap-container" id="mm-relational-container">
+      <div class="mindmap-toolbar">
+        <button class="btn btn-ghost" id="mm-relational-fit" style="font-size:12px;padding:6px 12px;">Fit</button>
+      </div>
+      <svg class="mindmap-svg" id="mm-relational-svg"></svg>
+      <div class="node-tooltip" id="mm-relational-tooltip"></div>
+    </div>
+
+    <p class="section-label">Quiz</p>
+    <div id="quiz-relational">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpf-relational"></div></div>
+      <div id="quiz-relational-q">
+        <div class="quiz-question-num" id="qnum-relational">Question 1 of 5</div>
+        <div class="quiz-question-text" id="qtext-relational"></div>
+        <div class="quiz-options" id="qopts-relational"></div>
+        <div class="quiz-explanation" id="qexp-relational"></div>
+        <button class="btn quiz-next" id="qnext-relational">Next →</button>
+      </div>
+      <div class="quiz-result" id="qresult-relational">
+        <div class="score" id="qscore-relational"></div>
+        <div class="score-label">questions correct</div>
+        <ul class="wrong-list" id="qwrong-relational"></ul>
+        <button class="btn" id="qretry-relational">Retry</button>
+      </div>
+    </div>
+
+  </section><!-- /relational -->
+
+  <!-- ===== NON-RELATIONAL DATA ===== -->
+  <section class="domain" id="nonrelational">
+
+    <p class="section-label">Summary</p>
+    <div class="accordion">
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Blob Storage
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Blob Storage is object storage for unstructured data at massive scale. Blobs are organised into containers inside storage accounts. Three blob types exist for different write patterns.</p>
+          <ul>
+            <li><strong>Block blob</strong>: text and binary files (most common)</li>
+            <li><strong>Append blob</strong>: optimised for append-only operations (logs)</li>
+            <li><strong>Page blob</strong>: random read/write, used for Azure VM disks</li>
+            <li>Access tiers: <strong>Hot</strong> → frequent, <strong>Cool</strong> → infrequent, <strong>Cold</strong> → rare, <strong>Archive</strong> → offline</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Archive tier has the lowest storage cost but highest retrieval cost and latency (rehydration needed).</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Files
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Files provides fully managed cloud file shares accessible via <strong>SMB</strong> (Windows) and <strong>NFS</strong> (Linux/macOS) protocols. It replaces or supplements on-premises file servers.</p>
+          <ul>
+            <li>Mount as a network drive on Windows, Linux, macOS</li>
+            <li>Azure File Sync: sync on-premises servers with cloud shares</li>
+            <li>Use case: shared configuration files, lift-and-shift of apps needing a file share</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Azure Files = file shares (SMB/NFS). Azure Blob = object storage. They are different services for different use cases.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Table Storage
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Table Storage is a NoSQL key-value store for semi-structured data. Each row is identified by a composite key: <strong>PartitionKey</strong> (for distribution) + <strong>RowKey</strong> (unique within partition). Rows in the same partition can have different columns.</p>
+          <ul>
+            <li>Schema-less: each row can have different columns</li>
+            <li>PartitionKey: controls data distribution and query performance</li>
+            <li>RowKey: unique identifier within a partition</li>
+            <li>Low cost, high scale — good for non-relational structured data</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Table Storage is NOT a relational database. No JOINs, no foreign keys, no SQL. Query by PartitionKey + RowKey for best performance.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Cosmos DB
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Cosmos DB is a globally distributed, multi-model NoSQL database service. It offers single-digit millisecond latency, 99.999% SLA, and automatic multi-region replication. Data is stored in containers within databases within Cosmos DB accounts.</p>
+          <ul>
+            <li>Resource model: Account → Database → Container → Items</li>
+            <li>Partition key determines data distribution across physical partitions</li>
+            <li>Throughput: measured in Request Units (RU/s)</li>
+            <li>5 consistency levels: Strong, Bounded Staleness, Session, Consistent Prefix, Eventual</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Cosmos DB is multi-model — one account, multiple APIs. You pick the API at database creation time; it cannot be changed.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Cosmos DB APIs
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Cosmos DB offers five APIs, each mapping to a different data model. The API you choose determines the data model and query language.</p>
+          <ul>
+            <li><strong>NoSQL API</strong>: JSON documents, proprietary SQL dialect — native Cosmos DB</li>
+            <li><strong>MongoDB API</strong>: document model, BSON, compatible with MongoDB drivers</li>
+            <li><strong>Table API</strong>: key-value, drop-in replacement for Azure Table Storage</li>
+            <li><strong>Cassandra API</strong>: column-family, wide-column, CQL compatible</li>
+            <li><strong>Gremlin API</strong>: graph model, vertices and edges, Gremlin traversal language</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Use Gremlin for social networks/recommendations (relationships). Use Table API to migrate from Azure Table Storage with minimal code changes.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Storage Redundancy
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Storage replicates data to protect against hardware failures and outages. Redundancy options trade cost for geographic protection.</p>
+          <ul>
+            <li><strong>LRS</strong> (Locally Redundant): 3 copies in one datacenter — cheapest</li>
+            <li><strong>ZRS</strong> (Zone Redundant): 3 copies across 3 availability zones in one region</li>
+            <li><strong>GRS</strong> (Geo-Redundant): LRS in primary + async copy to secondary region</li>
+            <li><strong>GZRS</strong> (Geo-Zone Redundant): ZRS in primary + async copy to secondary region — most resilient</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> RA-GRS and RA-GZRS add read access to the secondary region. Without RA-, secondary is only accessible during failover.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="section-label">Flashcards</p>
+    <div class="flashcard-wrapper" id="fc-nonrelational">
+      <div class="card-counter" id="fc-nonrelational-counter">Card 1 of 11</div>
+      <div class="card-scene" id="fc-nonrelational-scene">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-question" id="fc-nonrelational-q">What are the three Blob Storage types?</div>
+            <div class="card-hint">Click to reveal</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-answer" id="fc-nonrelational-a">Block, Append, Page</div>
+            <div class="card-explain" id="fc-nonrelational-e">Block = general files; Append = logs; Page = VM disks (random read/write)</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-controls">
+        <button class="btn btn-ghost" id="fc-nonrelational-prev">← Prev</button>
+        <button class="btn btn-ghost" id="fc-nonrelational-shuffle">Shuffle</button>
+        <button class="btn btn-ghost" id="fc-nonrelational-next">Next →</button>
+      </div>
+    </div>
+
+    <p class="section-label">Mind Map</p>
+    <div class="mindmap-container" id="mm-nonrelational-container">
+      <div class="mindmap-toolbar">
+        <button class="btn btn-ghost" id="mm-nonrelational-fit" style="font-size:12px;padding:6px 12px;">Fit</button>
+      </div>
+      <svg class="mindmap-svg" id="mm-nonrelational-svg"></svg>
+      <div class="node-tooltip" id="mm-nonrelational-tooltip"></div>
+    </div>
+
+    <p class="section-label">Quiz</p>
+    <div id="quiz-nonrelational">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpf-nonrelational"></div></div>
+      <div id="quiz-nonrelational-q">
+        <div class="quiz-question-num" id="qnum-nonrelational">Question 1 of 5</div>
+        <div class="quiz-question-text" id="qtext-nonrelational"></div>
+        <div class="quiz-options" id="qopts-nonrelational"></div>
+        <div class="quiz-explanation" id="qexp-nonrelational"></div>
+        <button class="btn quiz-next" id="qnext-nonrelational">Next →</button>
+      </div>
+      <div class="quiz-result" id="qresult-nonrelational">
+        <div class="score" id="qscore-nonrelational"></div>
+        <div class="score-label">questions correct</div>
+        <ul class="wrong-list" id="qwrong-nonrelational"></ul>
+        <button class="btn" id="qretry-nonrelational">Retry</button>
+      </div>
+    </div>
+
+  </section><!-- /nonrelational -->
+
+  <!-- ===== ANALYTICS ===== -->
+  <section class="domain" id="analytics">
+
+    <p class="section-label">Summary</p>
+    <div class="accordion">
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Modern Data Warehouse Architecture
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>A modern data warehouse ingests data from multiple sources, stores it in a data lake, transforms it, and loads it into an analytical store for reporting. The <strong>medallion architecture</strong> organises lake data into Bronze (raw), Silver (cleaned), and Gold (aggregated) layers.</p>
+          <ul>
+            <li>Bronze: raw ingestion, no transformation</li>
+            <li>Silver: cleaned, deduplicated, conformed</li>
+            <li>Gold: business-ready aggregates for BI</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> The medallion architecture (Bronze/Silver/Gold) is associated with Azure Databricks and Delta Lake, not Azure Synapse specifically.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Data Factory (ADF)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Data Factory is a cloud ETL/ELT service for orchestrating data movement and transformation pipelines. It connects to 90+ data sources using linked services and connectors.</p>
+          <ul>
+            <li>Pipeline: logical grouping of activities</li>
+            <li>Activity: a single step (Copy, Mapping Data Flow, HDInsight, etc.)</li>
+            <li>Linked service: connection string to a data store or compute</li>
+            <li>Dataset: named reference to data within a linked service</li>
+            <li>Integration runtime: compute infrastructure for pipeline execution</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> ADF is an orchestration service — it moves and transforms data. It is NOT a storage service or query engine.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Data Lake Storage Gen2 (ADLS Gen2)
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>ADLS Gen2 is Azure Blob Storage with the Hierarchical Namespace (HNS) feature enabled. HNS gives true directory semantics, enabling atomic rename/delete on directories and fine-grained POSIX ACLs on files and folders.</p>
+          <ul>
+            <li>Built on Blob Storage — same low cost, same access tiers</li>
+            <li>Hierarchical namespace: true folders, not just path prefixes</li>
+            <li>POSIX ACLs for fine-grained access control</li>
+            <li>Optimised for analytics workloads (Hadoop, Spark, Synapse)</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> ADLS Gen2 = Blob Storage + Hierarchical Namespace. If you need a data lake for analytics, enable HNS on a Blob Storage account.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Synapse Analytics
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Synapse Analytics is an integrated analytics platform combining data warehousing, big data, and data integration in one service. It includes a dedicated SQL pool (formerly SQL Data Warehouse), serverless SQL, Spark pools, Synapse Pipelines (ADF-compatible), and Synapse Link.</p>
+          <ul>
+            <li>Dedicated SQL pool: MPP data warehouse, massively parallel</li>
+            <li>Serverless SQL pool: query data lake files without loading (pay per query)</li>
+            <li>Apache Spark pool: notebook-based data engineering and ML</li>
+            <li>Synapse Link: near-real-time analytics on Cosmos DB operational data</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Synapse serverless SQL can query Parquet/CSV in ADLS Gen2 directly — no ETL needed. Great for ad-hoc exploration.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Databricks
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Databricks is a managed Apache Spark platform optimised for collaboration between data engineers, data scientists, and analysts. It supports notebooks in Python, R, Scala, and SQL, and natively integrates with Delta Lake.</p>
+          <ul>
+            <li>Built on Apache Spark — distributed data processing at scale</li>
+            <li>Delta Lake: open-source ACID storage layer on data lake</li>
+            <li>MLflow: built-in ML experiment tracking</li>
+            <li>Unity Catalog: unified data governance across workspaces</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Databricks = Spark + Delta Lake + collaboration. If the exam mentions medallion architecture or Delta tables, think Databricks.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Azure Stream Analytics
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Azure Stream Analytics is a fully managed real-time analytics service. It processes streaming data from Azure Event Hubs, IoT Hub, or Blob Storage using a SQL-like query language, and outputs results to various sinks.</p>
+          <ul>
+            <li>Inputs: Event Hubs, IoT Hub, Blob Storage</li>
+            <li>Outputs: Power BI, Azure SQL DB, Blob, Cosmos DB, Event Hubs, more</li>
+            <li>Windowing functions: Tumbling, Hopping, Sliding, Session</li>
+            <li>Use cases: IoT telemetry, fraud detection, live dashboards</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Stream Analytics uses a SQL-like language. Tumbling windows are non-overlapping fixed-size time windows.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Power BI
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Power BI is Microsoft's self-service BI and visualisation platform. It has three components: <strong>Power BI Desktop</strong> (authoring), <strong>Power BI Service</strong> (cloud publishing and sharing), and <strong>Power BI Mobile</strong> (consumption on devices).</p>
+          <ul>
+            <li>Desktop: build reports and data models locally</li>
+            <li>Service: publish, share, schedule refresh, create dashboards</li>
+            <li>Workspaces: collaboration areas for reports and datasets</li>
+            <li>DAX: formula language for calculated columns and measures</li>
+            <li>Direct Lake: query Delta tables in OneLake without import</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> A <strong>dashboard</strong> in Power BI Service is a single page of pinned visuals from multiple reports. A <strong>report</strong> is multi-page and built in Desktop.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
+          Star Schema
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>A star schema organises data warehouse tables into a central <strong>fact table</strong> (measures/events) surrounded by <strong>dimension tables</strong> (descriptive attributes for filtering and grouping). It is denormalised for query performance.</p>
+          <ul>
+            <li>Fact table: numeric measures (sales amount, quantity), foreign keys to dimensions</li>
+            <li>Dimension table: descriptive attributes (product name, customer city, date)</li>
+            <li>SCD Type 1: overwrite old value — no history</li>
+            <li>SCD Type 2: add new row with new value — full history preserved</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Power BI works best with a star schema. Snowflake schema (normalised dimensions) is supported but adds query complexity.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="section-label">Flashcards</p>
+    <div class="flashcard-wrapper" id="fc-analytics">
+      <div class="card-counter" id="fc-analytics-counter">Card 1 of 12</div>
+      <div class="card-scene" id="fc-analytics-scene">
+        <div class="card-inner">
+          <div class="card-face card-front">
+            <div class="card-question" id="fc-analytics-q">What are the three layers of the medallion architecture?</div>
+            <div class="card-hint">Click to reveal</div>
+          </div>
+          <div class="card-face card-back">
+            <div class="card-answer" id="fc-analytics-a">Bronze, Silver, Gold</div>
+            <div class="card-explain" id="fc-analytics-e">Bronze = raw data; Silver = cleaned/conformed; Gold = aggregated, BI-ready</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-controls">
+        <button class="btn btn-ghost" id="fc-analytics-prev">← Prev</button>
+        <button class="btn btn-ghost" id="fc-analytics-shuffle">Shuffle</button>
+        <button class="btn btn-ghost" id="fc-analytics-next">Next →</button>
+      </div>
+    </div>
+
+    <p class="section-label">Mind Map</p>
+    <div class="mindmap-container" id="mm-analytics-container">
+      <div class="mindmap-toolbar">
+        <button class="btn btn-ghost" id="mm-analytics-fit" style="font-size:12px;padding:6px 12px;">Fit</button>
+      </div>
+      <svg class="mindmap-svg" id="mm-analytics-svg"></svg>
+      <div class="node-tooltip" id="mm-analytics-tooltip"></div>
+    </div>
+
+    <p class="section-label">Quiz</p>
+    <div id="quiz-analytics">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpf-analytics"></div></div>
+      <div id="quiz-analytics-q">
+        <div class="quiz-question-num" id="qnum-analytics">Question 1 of 5</div>
+        <div class="quiz-question-text" id="qtext-analytics"></div>
+        <div class="quiz-options" id="qopts-analytics"></div>
+        <div class="quiz-explanation" id="qexp-analytics"></div>
+        <button class="btn quiz-next" id="qnext-analytics">Next →</button>
+      </div>
+      <div class="quiz-result" id="qresult-analytics">
+        <div class="score" id="qscore-analytics"></div>
+        <div class="score-label">questions correct</div>
+        <ul class="wrong-list" id="qwrong-analytics"></ul>
+        <button class="btn" id="qretry-analytics">Retry</button>
+      </div>
+    </div>
+
+  </section><!-- /analytics -->
+
+</main>
+
+<script>
+// ===== TABS =====
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.domain').forEach(d => d.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ===== ACCORDION =====
+document.querySelectorAll('.acc-trigger').forEach(trigger => {
+  trigger.addEventListener('click', () => {
+    const item = trigger.closest('.acc-item');
+    const isOpen = item.classList.contains('open');
+    trigger.closest('.accordion').querySelectorAll('.acc-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+
+// ===== FLASHCARDS =====
+const flashcardData = {
+  core: [
+    { q: 'What are the three data classifications?', a: 'Structured, Semi-structured, Unstructured', e: 'Structured = fixed schema tables; Semi-structured = JSON/XML; Unstructured = images/video' },
+    { q: 'Which file format is columnar and best for analytics?', a: 'Parquet', e: 'Reads only the columns needed — very efficient for analytical queries over millions of rows.' },
+    { q: 'What does ACID stand for?', a: 'Atomicity, Consistency, Isolation, Durability', e: 'ACID guarantees reliable transaction processing in OLTP systems.' },
+    { q: 'What is ETL?', a: 'Extract, Transform, Load', e: 'Data is transformed before being loaded into the target store.' },
+    { q: 'What is ELT?', a: 'Extract, Load, Transform', e: 'Raw data is loaded first, then transformed in-place — common with cloud data warehouses.' },
+    { q: 'What is a data lakehouse?', a: 'Data lake storage + warehouse query performance', e: 'Delta Lake is the key technology — adds ACID transactions on top of Parquet files.' },
+    { q: 'Which format adds ACID transactions to Parquet?', a: 'Delta Lake', e: 'Delta Lake = Parquet + transaction log. Enables inserts, updates, deletes on lake storage.' },
+    { q: 'What is batch processing?', a: 'Processing data in scheduled groups', e: 'High latency, high throughput. Examples: nightly ETL, monthly billing runs.' },
+    { q: 'What is stream processing?', a: 'Processing data continuously as it arrives', e: 'Low latency, event-by-event. Examples: fraud detection, IoT telemetry.' },
+    { q: 'What is semi-structured data?', a: 'Flexible schema using tags or key-value pairs', e: 'Examples: JSON, XML, YAML. Implied structure but no fixed relational schema.' },
+    { q: 'What is a data lake?', a: 'Storage for raw data in any format', e: 'Schema applied on read (not write). Stores structured, semi-structured, and unstructured data.' },
+    { q: 'What is an Append blob best used for?', a: 'Log files and audit trails', e: 'Append blobs are optimised for append-only operations — you can only add to the end.' }
+  ],
+  relational: [
+    { q: 'What SQL statement removes a table entirely?', a: 'DROP TABLE', e: 'DDL statement — removes the table definition AND all its data permanently.' },
+    { q: 'Difference between DELETE and DROP TABLE?', a: 'DELETE removes rows; DROP TABLE removes the table', e: 'DELETE is DML (keeps the table). DROP TABLE is DDL (destroys the table).' },
+    { q: 'What are DDL, DML, and DCL?', a: 'Data Definition, Manipulation, Control Language', e: 'DDL: CREATE/ALTER/DROP. DML: SELECT/INSERT/UPDATE/DELETE. DCL: GRANT/REVOKE/DENY.' },
+    { q: 'What is a primary key?', a: 'Uniquely identifies each row in a table', e: 'Cannot be NULL or duplicate. Referenced by foreign keys in other tables.' },
+    { q: 'What is normalisation?', a: 'Organising data to reduce redundancy', e: 'Splits data into related tables linked by foreign keys. Reduces update anomalies.' },
+    { q: 'Which Azure SQL option is best for lift-and-shift?', a: 'Azure SQL Managed Instance', e: 'Near-100% SQL Server compatibility — supports SQL Agent, cross-DB queries, linked servers.' },
+    { q: 'SQL Server on Azure VMs is which service model?', a: 'IaaS', e: 'You manage the OS and SQL Server. Azure provides the hardware.' },
+    { q: 'What is Azure SQL Database Serverless?', a: 'Auto-pauses compute when inactive', e: 'Reduces cost for databases with unpredictable or intermittent usage patterns.' },
+    { q: 'What does a VIEW do in SQL?', a: 'Saved query treated as a virtual table', e: 'Does not store data. Queried like a table. Useful for security and simplifying complex queries.' },
+    { q: 'What is an index in SQL?', a: 'A structure that speeds up read queries', e: 'Trades write overhead and storage for faster SELECT performance.' }
+  ],
+  nonrelational: [
+    { q: 'What are the three Blob Storage types?', a: 'Block, Append, Page', e: 'Block = general files; Append = logs; Page = VM disks (random read/write).' },
+    { q: 'Which Blob type is used for Azure VM disks?', a: 'Page blob', e: 'Page blobs support random read/write in 512-byte pages — ideal for OS and data disks.' },
+    { q: 'What protocols does Azure Files support?', a: 'SMB and NFS', e: 'SMB = Windows. NFS = Linux/macOS. Mount as a network drive on any OS.' },
+    { q: 'What two keys identify a row in Azure Table Storage?', a: 'PartitionKey and RowKey', e: 'PartitionKey controls distribution. RowKey is unique within the partition.' },
+    { q: "What is Cosmos DB's SLA?", a: '99.999% availability', e: 'Multi-region active-active replication enables this five-nines SLA.' },
+    { q: 'Which Cosmos DB API is for graph data?', a: 'Gremlin API', e: 'Uses vertices (entities) and edges (relationships). Best for social networks.' },
+    { q: 'What is the Cosmos DB resource hierarchy?', a: 'Account → Database → Container → Items', e: 'Containers hold items and define the partition key and throughput (RU/s).' },
+    { q: 'What is GZRS?', a: 'Geo-Zone Redundant Storage', e: 'ZRS in primary region + async replication to secondary region. Highest resilience.' },
+    { q: 'What is LRS?', a: 'Locally Redundant Storage — 3 copies in one datacenter', e: 'Cheapest option. No protection against datacenter-level failures.' },
+    { q: 'Which Cosmos DB API replaces Azure Table Storage?', a: 'Table API', e: 'Drop-in replacement — migrate from Table Storage to Cosmos DB with minimal code changes.' },
+    { q: 'What does the Archive access tier mean?', a: 'Offline storage — rehydration required before access', e: 'Lowest storage cost, highest retrieval cost. Rehydration takes hours.' }
+  ],
+  analytics: [
+    { q: 'What are the three medallion architecture layers?', a: 'Bronze, Silver, Gold', e: 'Bronze = raw; Silver = cleaned/conformed; Gold = aggregated, BI-ready.' },
+    { q: 'What is Azure Data Factory?', a: 'Cloud ETL/ELT orchestration service', e: 'Moves and transforms data between stores. NOT a storage or query service.' },
+    { q: 'What does ADLS Gen2 add to Blob Storage?', a: 'Hierarchical Namespace (HNS)', e: 'HNS enables true directory semantics and POSIX ACLs for analytics workloads.' },
+    { q: 'Two SQL pools in Azure Synapse Analytics?', a: 'Dedicated SQL pool and Serverless SQL pool', e: 'Dedicated = MPP data warehouse (provisioned). Serverless = pay-per-query on lake files.' },
+    { q: 'What is Azure Databricks built on?', a: 'Apache Spark', e: 'Managed Spark platform with Delta Lake, MLflow, and Unity Catalog.' },
+    { q: 'What inputs does Azure Stream Analytics accept?', a: 'Event Hubs, IoT Hub, Blob Storage', e: 'Processes streaming data using a SQL-like query language in real-time.' },
+    { q: 'Three components of Power BI?', a: 'Desktop, Service, Mobile', e: 'Desktop = author reports. Service = publish/share/schedule. Mobile = consume on devices.' },
+    { q: 'What is a fact table?', a: 'Central table with numeric measures and FK references', e: 'Stores quantitative events (sales, orders). Links to dimension tables via foreign keys.' },
+    { q: 'What is SCD Type 2?', a: 'Adds a new row to preserve full history', e: 'Each change creates a new record with effective dates. SCD Type 1 overwrites — no history.' },
+    { q: 'What is DAX?', a: 'Data Analysis Expressions — Power BI formula language', e: 'Used to create calculated columns and measures in Power BI data models.' },
+    { q: 'What is a tumbling window in Stream Analytics?', a: 'Non-overlapping fixed-size time window', e: 'Each event belongs to exactly one window. Good for aggregating events per minute/hour.' },
+    { q: 'What is Synapse Link?', a: 'Near-real-time analytics on Cosmos DB data', e: 'Enables analytical queries on operational Cosmos DB data without impacting OLTP.' }
+  ]
+};
+
+function initFlashcards(domain) {
+  const data = flashcardData[domain];
+  let current = 0;
+  let order = data.map((_, i) => i);
+
+  const scene = document.getElementById('fc-' + domain + '-scene');
+  const counter = document.getElementById('fc-' + domain + '-counter');
+  const qEl = document.getElementById('fc-' + domain + '-q');
+  const aEl = document.getElementById('fc-' + domain + '-a');
+  const eEl = document.getElementById('fc-' + domain + '-e');
+
+  function show() {
+    scene.classList.remove('flipped');
+    const card = data[order[current]];
+    qEl.textContent = card.q;
+    aEl.textContent = card.a;
+    eEl.textContent = card.e;
+    counter.textContent = 'Card ' + (current + 1) + ' of ' + data.length;
+  }
+
+  scene.addEventListener('click', () => scene.classList.toggle('flipped'));
+
+  document.getElementById('fc-' + domain + '-prev').addEventListener('click', () => {
+    current = (current - 1 + data.length) % data.length; show();
+  });
+  document.getElementById('fc-' + domain + '-next').addEventListener('click', () => {
+    current = (current + 1) % data.length; show();
+  });
+  document.getElementById('fc-' + domain + '-shuffle').addEventListener('click', () => {
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    current = 0; show();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (document.querySelector('.tab-btn.active').dataset.tab !== domain) return;
+    if (e.key === 'ArrowRight') { current = (current + 1) % data.length; show(); }
+    if (e.key === 'ArrowLeft') { current = (current - 1 + data.length) % data.length; show(); }
+  });
+
+  show();
+}
+
+['core', 'relational', 'nonrelational', 'analytics'].forEach(initFlashcards);
+
+// ===== MIND MAPS =====
+const mindMapData = {
+  core: {
+    nodes: [
+      { id: 0, label: 'Core Data', level: 0, tooltip: 'Core data concepts for DP-900: formats, storage, databases, and processing.' },
+      { id: 1, label: 'Data Formats', level: 1, tooltip: 'Structured, semi-structured, unstructured. JSON, CSV, Parquet, Avro, Delta Lake.' },
+      { id: 2, label: 'File Storage', level: 1, tooltip: 'File systems, object storage, data lakes for unstructured data at scale.' },
+      { id: 3, label: 'Databases', level: 1, tooltip: 'Relational (tables+SQL) vs Non-relational (key-value, document, graph, column-family).' },
+      { id: 4, label: 'OLTP', level: 1, tooltip: 'Online Transaction Processing — ACID properties, high-volume small writes.' },
+      { id: 5, label: 'OLAP', level: 1, tooltip: 'Online Analytical Processing — complex queries over large datasets, data warehouse.' },
+      { id: 6, label: 'Batch / Stream', level: 1, tooltip: 'Batch: scheduled groups (high latency). Stream: continuous real-time processing.' },
+      { id: 7, label: 'Parquet', level: 2, tooltip: 'Columnar format — efficient for analytics, high compression.' },
+      { id: 8, label: 'Delta Lake', level: 2, tooltip: 'Parquet + ACID transaction log. Enables updates/deletes on data lake files.' },
+      { id: 9, label: 'ACID', level: 2, tooltip: 'Atomicity, Consistency, Isolation, Durability — transaction guarantees for OLTP.' },
+      { id: 10, label: 'ETL / ELT', level: 2, tooltip: 'ETL: transform before load. ELT: load then transform in target store.' },
+      { id: 11, label: 'Lakehouse', level: 2, tooltip: 'Combines lake storage with warehouse query performance. Built on Delta Lake.' }
+    ],
+    links: [
+      { source: 0, target: 1 }, { source: 0, target: 2 }, { source: 0, target: 3 },
+      { source: 0, target: 4 }, { source: 0, target: 5 }, { source: 0, target: 6 },
+      { source: 1, target: 7 }, { source: 1, target: 8 },
+      { source: 4, target: 9 }, { source: 5, target: 10 }, { source: 5, target: 11 }
+    ]
+  },
+  relational: {
+    nodes: [
+      { id: 0, label: 'Relational', level: 0, tooltip: 'Relational databases: tables, SQL, keys, and Azure SQL services.' },
+      { id: 1, label: 'SQL', level: 1, tooltip: 'Structured Query Language — DDL, DML, DCL for managing relational data.' },
+      { id: 2, label: 'Azure SQL DB', level: 1, tooltip: 'Fully managed PaaS. Single DB or Elastic Pool. Serverless option available.' },
+      { id: 3, label: 'SQL Managed Instance', level: 1, tooltip: 'PaaS with near-100% SQL Server compatibility. Best for lift-and-shift migrations.' },
+      { id: 4, label: 'SQL on Azure VMs', level: 1, tooltip: 'IaaS — full control over OS and SQL Server. You manage patching and backups.' },
+      { id: 5, label: 'Keys & Indexes', level: 1, tooltip: 'Primary key: unique row ID. Foreign key: table link. Index: faster queries.' },
+      { id: 6, label: 'DDL', level: 2, tooltip: 'CREATE, ALTER, DROP — defines database structure.' },
+      { id: 7, label: 'DML', level: 2, tooltip: 'SELECT, INSERT, UPDATE, DELETE — manipulates data.' },
+      { id: 8, label: 'DCL', level: 2, tooltip: 'GRANT, REVOKE, DENY — controls permissions.' },
+      { id: 9, label: 'Serverless', level: 2, tooltip: 'Azure SQL DB option that auto-pauses when inactive to save cost.' },
+      { id: 10, label: 'Elastic Pool', level: 2, tooltip: 'Shared resources across multiple databases — cost-efficient for variable workloads.' }
+    ],
+    links: [
+      { source: 0, target: 1 }, { source: 0, target: 2 }, { source: 0, target: 3 },
+      { source: 0, target: 4 }, { source: 0, target: 5 },
+      { source: 1, target: 6 }, { source: 1, target: 7 }, { source: 1, target: 8 },
+      { source: 2, target: 9 }, { source: 2, target: 10 }
+    ]
+  },
+  nonrelational: {
+    nodes: [
+      { id: 0, label: 'Non-Relational', level: 0, tooltip: 'NoSQL services in Azure: Blob, Files, Table Storage, Cosmos DB.' },
+      { id: 1, label: 'Blob Storage', level: 1, tooltip: 'Object storage for unstructured data. Block, Append, Page blob types.' },
+      { id: 2, label: 'Azure Files', level: 1, tooltip: 'Managed file shares via SMB and NFS protocols.' },
+      { id: 3, label: 'Table Storage', level: 1, tooltip: 'NoSQL key-value store. PartitionKey + RowKey composite key.' },
+      { id: 4, label: 'Cosmos DB', level: 1, tooltip: 'Globally distributed multi-model NoSQL. 99.999% SLA. 5 APIs.' },
+      { id: 5, label: 'Redundancy', level: 1, tooltip: 'LRS, ZRS, GRS, GZRS — trade cost for geographic protection.' },
+      { id: 6, label: 'Access Tiers', level: 2, tooltip: 'Hot, Cool, Cold, Archive — balance storage cost vs retrieval speed.' },
+      { id: 7, label: 'NoSQL API', level: 2, tooltip: 'JSON documents with SQL dialect — the native Cosmos DB API.' },
+      { id: 8, label: 'Gremlin API', level: 2, tooltip: 'Graph model (vertices + edges). Best for social networks.' },
+      { id: 9, label: 'Table API', level: 2, tooltip: 'Key-value model. Drop-in replacement for Azure Table Storage.' },
+      { id: 10, label: 'Cassandra API', level: 2, tooltip: 'Column-family model, CQL compatible. Wide-column sparse data.' },
+      { id: 11, label: 'GZRS', level: 2, tooltip: 'Geo-Zone Redundant Storage — ZRS + geo-replication. Highest resilience.' }
+    ],
+    links: [
+      { source: 0, target: 1 }, { source: 0, target: 2 }, { source: 0, target: 3 },
+      { source: 0, target: 4 }, { source: 0, target: 5 },
+      { source: 1, target: 6 },
+      { source: 4, target: 7 }, { source: 4, target: 8 }, { source: 4, target: 9 }, { source: 4, target: 10 },
+      { source: 5, target: 11 }
+    ]
+  },
+  analytics: {
+    nodes: [
+      { id: 0, label: 'Analytics', level: 0, tooltip: 'Analytics in Azure: ingestion, storage, processing, and visualisation.' },
+      { id: 1, label: 'Data Factory', level: 1, tooltip: 'ETL/ELT orchestration. 90+ connectors. Pipelines, activities, datasets.' },
+      { id: 2, label: 'ADLS Gen2', level: 1, tooltip: 'Blob Storage + Hierarchical Namespace. Foundation for Azure data lakes.' },
+      { id: 3, label: 'Synapse Analytics', level: 1, tooltip: 'Integrated analytics: dedicated SQL, serverless SQL, Spark pools.' },
+      { id: 4, label: 'Databricks', level: 1, tooltip: 'Managed Spark + Delta Lake. Medallion architecture (Bronze/Silver/Gold).' },
+      { id: 5, label: 'Stream Analytics', level: 1, tooltip: 'Real-time stream processing. SQL-like queries. Tumbling/hopping windows.' },
+      { id: 6, label: 'Power BI', level: 1, tooltip: 'BI platform: Desktop (author) + Service (publish) + Mobile (consume).' },
+      { id: 7, label: 'Dedicated SQL', level: 2, tooltip: 'MPP data warehouse in Synapse. Provisioned compute for large-scale DW.' },
+      { id: 8, label: 'Serverless SQL', level: 2, tooltip: 'Query ADLS Gen2 files (Parquet/CSV) without loading. Pay per query.' },
+      { id: 9, label: 'Star Schema', level: 2, tooltip: 'Fact table (measures) + dimension tables (attributes). Optimised for BI.' },
+      { id: 10, label: 'DAX', level: 2, tooltip: 'Data Analysis Expressions — formula language for Power BI measures.' },
+      { id: 11, label: 'Medallion', level: 2, tooltip: 'Bronze (raw) → Silver (cleaned) → Gold (aggregated). Databricks/Delta pattern.' }
+    ],
+    links: [
+      { source: 0, target: 1 }, { source: 0, target: 2 }, { source: 0, target: 3 },
+      { source: 0, target: 4 }, { source: 0, target: 5 }, { source: 0, target: 6 },
+      { source: 3, target: 7 }, { source: 3, target: 8 },
+      { source: 6, target: 9 }, { source: 6, target: 10 },
+      { source: 4, target: 11 }
+    ]
+  }
+};
+
+function renderMindMap(domain) {
+  const svgEl = document.getElementById('mm-' + domain + '-svg');
+  const containerEl = document.getElementById('mm-' + domain + '-container');
+  const tooltipEl = document.getElementById('mm-' + domain + '-tooltip');
+  const fitBtn = document.getElementById('mm-' + domain + '-fit');
+  const data = mindMapData[domain];
+
+  const nodes = data.nodes.map(n => ({ ...n }));
+  const links = data.links.map(l => ({ ...l }));
+
+  const svg = d3.select(svgEl);
+  svg.selectAll('*').remove();
+
+  const W = svgEl.clientWidth || 600;
+  const H = 420;
+
+  const g = svg.append('g');
+  const zoom = d3.zoom().scaleExtent([0.3, 3]).on('zoom', e => g.attr('transform', e.transform));
+  svg.call(zoom);
+
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.target.level === 2 ? 85 : 120))
+    .force('charge', d3.forceManyBody().strength(-280))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collision', d3.forceCollide(42));
+
+  const linkSel = g.append('g').selectAll('line')
+    .data(links).enter().append('line')
+    .attr('stroke', '#2a2d3e').attr('stroke-width', 1.5);
+
+  const nodeSel = g.append('g').selectAll('g.node')
+    .data(nodes).enter().append('g').attr('class', 'node').style('cursor', 'pointer')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+      .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; })
+    );
+
+  const radii = [28, 18, 12];
+  const colors = ['#6c63ff', '#e2e8f0', '#94a3b8'];
+
+  nodeSel.append('circle')
+    .attr('r', d => radii[d.level])
+    .attr('fill', d => colors[d.level])
+    .attr('stroke', '#0f1117').attr('stroke-width', 2);
+
+  nodeSel.append('text')
+    .attr('text-anchor', 'middle')
+    .attr('dy', d => radii[d.level] + 13)
+    .attr('fill', d => colors[d.level])
+    .attr('font-size', d => [13, 11, 10][d.level])
+    .attr('font-family', 'Inter, sans-serif')
+    .attr('pointer-events', 'none')
+    .text(d => d.label);
+
+  nodeSel.on('click', (e, d) => {
+    if (!d.tooltip) return;
+    const rect = containerEl.getBoundingClientRect();
+    tooltipEl.textContent = d.tooltip;
+    tooltipEl.style.opacity = '1';
+    tooltipEl.style.left = Math.min(e.clientX - rect.left + 12, rect.width - 230) + 'px';
+    tooltipEl.style.top = Math.max(e.clientY - rect.top - 10, 8) + 'px';
+    e.stopPropagation();
+  });
+  containerEl.addEventListener('click', () => { tooltipEl.style.opacity = '0'; });
+
+  sim.on('tick', () => {
+    linkSel.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+           .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+  fitBtn.addEventListener('click', () => {
+    svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+  });
+}
+
+['core', 'relational', 'nonrelational', 'analytics'].forEach(renderMindMap);
+
+// ===== QUIZ =====
+const quizData = {
+  core: [
+    { q: 'Which file format is columnar and most efficient for analytical queries?', opts: ['CSV', 'Parquet', 'Avro', 'JSON'], ans: 1, exp: 'Parquet stores data by column — reads only the columns needed, making it very efficient for analytics over millions of rows.' },
+    { q: 'What does ACID stand for in database transactions?', opts: ['Authority, Consistency, Integration, Data', 'Authenticity, Consistency, Integrity, Durability', 'Atomicity, Consistency, Isolation, Durability', 'Atomicity, Compliance, Isolation, Delivery'], ans: 2, exp: 'ACID properties guarantee reliable transaction processing. OLTP systems depend on them for data integrity under concurrent usage.' },
+    { q: 'What is the key difference between ETL and ELT?', opts: ['ETL is for streaming; ELT is for batch', 'ETL uses SQL only; ELT uses Python only', 'ETL is on-premises; ELT is cloud-only', 'ETL transforms before loading; ELT transforms after loading'], ans: 3, exp: 'In ELT, raw data is loaded into the target first, then transformed there — common in cloud data warehouses like Synapse and Databricks.' },
+    { q: 'Which type of data has no predefined schema?', opts: ['Unstructured', 'Structured', 'Semi-structured', 'Normalised'], ans: 0, exp: 'Unstructured data (images, video, audio) has no defined schema. Typically stored in blob/object storage or data lakes.' },
+    { q: 'Which processing style handles data continuously as events arrive?', opts: ['Batch processing', 'OLAP processing', 'Stream processing', 'ETL processing'], ans: 2, exp: 'Stream processing provides low-latency event-by-event handling — ideal for real-time fraud detection, IoT telemetry, and live dashboards.' }
+  ],
+  relational: [
+    { q: 'Which Azure SQL option provides the best compatibility for lift-and-shift SQL Server migrations?', opts: ['Azure SQL Database', 'SQL Server on Azure VMs', 'Azure Database for PostgreSQL', 'Azure SQL Managed Instance'], ans: 3, exp: 'SQL Managed Instance supports SQL Server Agent, cross-database queries, and linked servers — features SQL Database lacks but on-premises SQL Server has.' },
+    { q: 'Which SQL statement category does CREATE TABLE belong to?', opts: ['DML', 'DDL', 'DCL', 'TCL'], ans: 1, exp: 'DDL (Data Definition Language) defines database structure. CREATE, ALTER, and DROP are all DDL statements.' },
+    { q: 'SQL Server on Azure Virtual Machines is which cloud service model?', opts: ['SaaS', 'FaaS', 'IaaS', 'PaaS'], ans: 2, exp: 'IaaS — you manage the OS and SQL Server. Azure provides the hardware. PaaS (SQL DB, MI) abstracts OS management.' },
+    { q: 'What is the purpose of a foreign key?', opts: ['Link rows between related tables', 'Uniquely identify each row in a table', 'Speed up SELECT queries', 'Encrypt sensitive column data'], ans: 0, exp: 'A foreign key in one table references the primary key of another table, enforcing referential integrity between them.' },
+    { q: 'Which SQL statement removes only the rows but keeps the table structure?', opts: ['DROP TABLE', 'ALTER TABLE', 'TRUNCATE TABLE', 'DELETE'], ans: 3, exp: 'DELETE is DML — removes rows (supports WHERE). DROP TABLE is DDL — destroys the entire table including its definition.' }
+  ],
+  nonrelational: [
+    { q: 'Which Azure Blob Storage type is optimised for append-only operations like logging?', opts: ['Block blob', 'Append blob', 'Page blob', 'Archive blob'], ans: 1, exp: 'Append blobs support append-only operations — you cannot update or delete existing blocks, making them perfect for logs and audit trails.' },
+    { q: 'What two fields form the composite key in Azure Table Storage?', opts: ['PartitionKey and RowKey', 'PrimaryKey and SortKey', 'TableKey and ItemKey', 'HashKey and RangeKey'], ans: 0, exp: 'PartitionKey controls data distribution. RowKey is unique within a partition. Together they uniquely identify every entity.' },
+    { q: 'Which Cosmos DB API is best suited for a social network with complex relationships?', opts: ['NoSQL API', 'Table API', 'Cassandra API', 'Gremlin API'], ans: 3, exp: 'Gremlin API uses a graph model with vertices and edges. Ideal for social networks, recommendation engines, and fraud detection graphs.' },
+    { q: 'Which Azure Storage redundancy option provides both zone resilience and geo-replication?', opts: ['GRS', 'GZRS', 'ZRS', 'LRS'], ans: 1, exp: 'GZRS (Geo-Zone Redundant Storage) combines ZRS (3 zones in primary region) with async replication to a secondary region — the highest resilience level.' },
+    { q: 'What access tier should you use for data that is rarely accessed and can tolerate retrieval delay?', opts: ['Hot', 'Cold', 'Archive', 'Cool'], ans: 2, exp: 'Archive tier has the lowest storage cost but data is offline — rehydration to Hot or Cool takes hours before you can read it.' }
+  ],
+  analytics: [
+    { q: 'What does the Bronze layer in the medallion architecture contain?', opts: ['Cleaned and deduplicated data', 'Raw ingested data with no transformation', 'Archived historical snapshots', 'Aggregated BI-ready data'], ans: 1, exp: 'Bronze = raw data exactly as received from source systems. No transformations applied. Silver = cleaned. Gold = aggregated for BI.' },
+    { q: 'What is Azure Data Factory primarily used for?', opts: ['Storing large volumes of raw data', 'Running real-time analytical queries', 'Building interactive dashboards', 'Orchestrating data movement and ETL/ELT pipelines'], ans: 3, exp: 'ADF is an orchestration service — it moves and transforms data between stores. It is not a storage or query engine.' },
+    { q: 'Which Synapse Analytics pool lets you query data lake files without loading them first?', opts: ['Dedicated SQL pool', 'Apache Spark pool', 'Serverless SQL pool', 'Synapse Link'], ans: 2, exp: 'Serverless SQL pool queries Parquet/CSV files in ADLS Gen2 directly — no ETL or data loading needed. You pay per query.' },
+    { q: 'In a star schema, what does a fact table store?', opts: ['Numeric measures and foreign keys to dimensions', 'Descriptive attributes like product name and city', 'Historical slowly-changing dimension data', 'Aggregated summary rollups only'], ans: 0, exp: 'Fact tables store quantitative business events (sales amount, order quantity) and link to dimension tables that describe who, what, when, and where.' },
+    { q: 'Which Power BI component is used to build and author reports and data models?', opts: ['Power BI Service', 'Power BI Mobile', 'Power BI Gateway', 'Power BI Desktop'], ans: 3, exp: 'Power BI Desktop is the Windows authoring tool. Service is for publishing, sharing, and scheduling. Mobile is for consumption on devices.' }
+  ]
+};
+
+function initQuiz(domain) {
+  const data = quizData[domain];
+  let current = 0, score = 0, wrongAnswers = [], answered = false;
+
+  const pfEl = document.getElementById('qpf-' + domain);
+  const numEl = document.getElementById('qnum-' + domain);
+  const textEl = document.getElementById('qtext-' + domain);
+  const optsEl = document.getElementById('qopts-' + domain);
+  const expEl = document.getElementById('qexp-' + domain);
+  const nextBtn = document.getElementById('qnext-' + domain);
+  const qBlock = document.getElementById('quiz-' + domain + '-q');
+  const resultBlock = document.getElementById('qresult-' + domain);
+  const scoreEl = document.getElementById('qscore-' + domain);
+  const wrongEl = document.getElementById('qwrong-' + domain);
+  const retryBtn = document.getElementById('qretry-' + domain);
+
+  function renderQuestion() {
+    answered = false;
+    const q = data[current];
+    pfEl.style.width = ((current / data.length) * 100) + '%';
+    numEl.textContent = 'Question ' + (current + 1) + ' of ' + data.length;
+    textEl.textContent = q.q;
+    expEl.style.display = 'none';
+    nextBtn.style.display = 'none';
+    optsEl.innerHTML = '';
+    q.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        optsEl.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+        if (i === q.ans) {
+          btn.classList.add('correct');
+          score++;
+        } else {
+          btn.classList.add('wrong');
+          optsEl.querySelectorAll('.quiz-option')[q.ans].classList.add('correct');
+          wrongAnswers.push({ q: q.q, correct: q.opts[q.ans] });
+        }
+        expEl.textContent = q.exp;
+        expEl.style.display = 'block';
+        nextBtn.style.display = 'inline-block';
+      });
+      optsEl.appendChild(btn);
+    });
+  }
+
+  nextBtn.addEventListener('click', () => {
+    current++;
+    if (current >= data.length) showResult(); else renderQuestion();
+  });
+
+  function showResult() {
+    qBlock.style.display = 'none';
+    resultBlock.style.display = 'block';
+    pfEl.style.width = '100%';
+    scoreEl.textContent = score + '/' + data.length;
+    wrongEl.innerHTML = wrongAnswers.length === 0
+      ? '<li style="color:var(--success)">Perfect score! All answers correct.</li>'
+      : wrongAnswers.map(w => `<li><strong style="color:var(--text)">${w.q}</strong><br>Correct: ${w.correct}</li>`).join('');
+  }
+
+  retryBtn.addEventListener('click', () => {
+    current = 0; score = 0; wrongAnswers = []; answered = false;
+    qBlock.style.display = 'block';
+    resultBlock.style.display = 'none';
+    renderQuestion();
+  });
+
+  renderQuestion();
+}
+
+['core', 'relational', 'nonrelational', 'analytics'].forEach(initQuiz);
+</script>
+</body>
+</html>
