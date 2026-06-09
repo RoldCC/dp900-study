@@ -473,9 +473,11 @@
             <li>ELT: Extract → Load → Transform (transform in-place, common with cloud DWs)</li>
             <li>Data warehouse: structured, schema-on-write, fast BI queries</li>
             <li>Data lake: raw data (any format), schema-on-read, flexible</li>
-            <li>Data lakehouse: combines lake storage with warehouse query performance</li>
+            <li>Data lakehouse: combines lake storage with warehouse query performance (e.g. Delta Lake)</li>
+            <li><strong>Lambda architecture</strong>: combines a batch layer (historical data) and a speed/stream layer (real-time data) with a serving layer that merges both for query</li>
+            <li><strong>Microsoft Fabric</strong>: unified SaaS analytics platform; all workloads share <strong>OneLake</strong> storage and use Delta Lake as the standard format</li>
           </ul>
-          <div class="exam-tip"><strong>⚠ Exam tip:</strong> OLAP ≠ OLTP. OLAP reads large datasets for analysis; OLTP writes small transactions for operations.</div>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> OLAP ≠ OLTP. OLAP reads large datasets for analysis; OLTP writes small transactions for operations. Lambda architecture = batch + stream layers combined.</div>
         </div>
       </div>
 
@@ -651,6 +653,7 @@
             <li><code>GROUP BY</code>: groups matching rows so aggregate functions can be applied</li>
             <li><code>HAVING</code>: filters groups after aggregation (cannot use aggregate functions in WHERE)</li>
             <li><code>DISTINCT</code>: removes duplicate rows from the result set</li>
+            <li><code>ORDER BY</code>: sorts the result set by one or more columns (ASC or DESC)</li>
             <li><code>INNER JOIN</code>: returns only rows where the join condition matches in both tables</li>
             <li><code>LEFT JOIN</code>: returns all rows from the left table; NULLs for unmatched right-table rows</li>
           </ul>
@@ -986,6 +989,25 @@
 
       <div class="acc-item">
         <button class="acc-trigger">
+          Microsoft Fabric
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="acc-body">
+          <p>Microsoft Fabric is a unified, end-to-end SaaS analytics platform that consolidates data engineering, data warehousing, real-time intelligence, and BI into a single workspace. All Fabric workloads share a common storage layer called <strong>OneLake</strong> — a tenant-wide data lake where data is stored once in Delta Lake format and used everywhere.</p>
+          <ul>
+            <li><strong>OneLake</strong>: tenant-wide storage shared across all Fabric workloads — no data copying between silos</li>
+            <li><strong>Fabric Lakehouse</strong>: stores data in Delta Lake format on OneLake; exposes a SQL analytics endpoint for querying</li>
+            <li><strong>Fabric Warehouse</strong>: SQL Server–compatible relational data warehouse backed by OneLake; best for structured, schema-enforced analytics</li>
+            <li><strong>Fabric Data Factory</strong>: built-in pipeline and ETL/ELT orchestration (same capabilities as Azure Data Factory)</li>
+            <li><strong>Power BI</strong>: core reporting workload of Fabric; uses Direct Lake mode to query OneLake files without data import</li>
+            <li><strong>Semantic model</strong>: the modern name for the analytical data model (formerly OLAP cube) that Power BI reports are built on — defines measures, relationships, and hierarchies</li>
+          </ul>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Fabric is SaaS — everything is in one workspace backed by OneLake. Azure Databricks is the IaaS/PaaS alternative for code-first Spark workloads. Both use Delta Lake.</div>
+        </div>
+      </div>
+
+      <div class="acc-item">
+        <button class="acc-trigger">
           Azure Stream Analytics
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
@@ -1013,13 +1035,17 @@
           <p>Power BI is Microsoft's self-service BI and visualisation platform. It has three components: <strong>Power BI Desktop</strong> (authoring), <strong>Power BI Service</strong> (cloud publishing and sharing), and <strong>Power BI Mobile</strong> (consumption on devices).</p>
           <ul>
             <li>Desktop: build reports and data models locally</li>
-            <li>Service: publish, share, schedule refresh, create dashboards</li>
-            <li>Workspaces: collaboration areas for reports and datasets</li>
-            <li>DAX: formula language for calculated columns and measures</li>
-            <li>Direct Lake: query Delta tables in OneLake without import</li>
+            <li>Service: publish, share, schedule refresh, create dashboards and apps</li>
+            <li>Mobile: consume reports on phones and tablets</li>
+            <li><strong>Workspaces</strong>: collaboration areas in the Service; roles are Admin, Member, Contributor, and Viewer</li>
+            <li><strong>Apps</strong>: packaged collections of dashboards and reports distributed to a broader audience from a workspace</li>
+            <li><strong>Semantic model</strong>: the data model (tables, relationships, measures) that reports are built on; can be shared across multiple reports</li>
+            <li><strong>DAX</strong>: formula language for calculated columns and measures (e.g. <code>SUM</code>, <code>CALCULATE</code>, <code>FILTER</code>)</li>
+            <li><strong>Direct Lake</strong>: reads Delta tables in OneLake directly — no import or scheduled refresh needed</li>
             <li><strong>On-premises data gateway</strong>: bridges the Power BI Service to on-premises data sources for scheduled refresh and DirectQuery</li>
+            <li>Key visualization types: bar/column (comparisons), line (trends), pie/donut (part-to-whole), table/matrix (detail), map (geographic), card (single value), KPI (progress toward goal), slicer (filter)</li>
           </ul>
-          <div class="exam-tip"><strong>⚠ Exam tip:</strong> A <strong>dashboard</strong> in Power BI Service is a single page of pinned visuals from multiple reports. A <strong>report</strong> is multi-page and built in Desktop. The gateway is required for refreshing on-premises data from the Service.</div>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> A <strong>dashboard</strong> is a single page of pinned visuals from multiple reports. A <strong>report</strong> is multi-page, built in Desktop. Choose bar/column for comparisons, line for trends, pie for proportions, card for KPIs, and slicer for interactive filtering.</div>
         </div>
       </div>
 
@@ -1029,14 +1055,16 @@
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
         <div class="acc-body">
-          <p>A star schema organises data warehouse tables into a central <strong>fact table</strong> (measures/events) surrounded by <strong>dimension tables</strong> (descriptive attributes for filtering and grouping). It is denormalised for query performance.</p>
+          <p>A star schema organises data warehouse tables into a central <strong>fact table</strong> (measures/events) surrounded by <strong>dimension tables</strong> (descriptive attributes for filtering and grouping). It is denormalised for query performance. A <strong>snowflake schema</strong> extends the star by further normalising dimension tables into sub-dimension tables (e.g. Product → Subcategory → Category), reducing storage at the cost of additional JOINs.</p>
           <ul>
             <li>Fact table: numeric measures (sales amount, quantity), foreign keys to dimensions</li>
             <li>Dimension table: descriptive attributes (product name, customer city, date)</li>
-            <li>SCD Type 1: overwrite old value — no history</li>
-            <li>SCD Type 2: add new row with new value — full history preserved</li>
+            <li><strong>Star schema</strong>: flat, denormalised dimensions — fewest JOINs, best query performance</li>
+            <li><strong>Snowflake schema</strong>: normalised sub-dimensions — less storage redundancy, but more complex queries</li>
+            <li>SCD Type 1: overwrite old value — no history preserved</li>
+            <li>SCD Type 2: insert a new row per change with start/end date columns — full history preserved</li>
           </ul>
-          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Power BI works best with a star schema. Snowflake schema (normalised dimensions) is supported but adds query complexity.</div>
+          <div class="exam-tip"><strong>⚠ Exam tip:</strong> Power BI works best with a star schema. SCD Type 2 preserves history by adding rows; Type 1 overwrites — no history. Snowflake schema normalises dimensions but adds JOIN complexity.</div>
         </div>
       </div>
 
