@@ -382,6 +382,7 @@
     <button class="tab-btn" data-tab="relational">Relational</button>
     <button class="tab-btn" data-tab="nonrelational">Non-Relational</button>
     <button class="tab-btn" data-tab="analytics">Analytics</button>
+    <button class="tab-btn" data-tab="mixed">Mixed Test</button>
   </div>
 </nav>
 
@@ -1155,6 +1156,27 @@
 
   </section><!-- /analytics -->
 
+  <!-- ===== MIXED TEST ===== -->
+  <section class="domain" id="mixed">
+    <p class="section-label">Mixed Practice Test — 50 Questions</p>
+    <div id="quiz-mixed">
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="qpf-mixed"></div></div>
+      <div id="quiz-mixed-q">
+        <div class="quiz-question-num" id="qnum-mixed">Question 1 of 50</div>
+        <div class="quiz-question-text" id="qtext-mixed"></div>
+        <div class="quiz-options" id="qopts-mixed"></div>
+        <div class="quiz-explanation" id="qexp-mixed"></div>
+        <button class="btn quiz-next" id="qnext-mixed">Next →</button>
+      </div>
+      <div class="quiz-result" id="qresult-mixed">
+        <div class="score" id="qscore-mixed"></div>
+        <div class="score-label">questions correct</div>
+        <ul class="wrong-list" id="qwrong-mixed"></ul>
+        <button class="btn" id="qretry-mixed">New Test →</button>
+      </div>
+    </div>
+  </section><!-- /mixed -->
+
 </main>
 
 <script>
@@ -1788,6 +1810,108 @@ function initQuiz(domain) {
 }
 
 ['core', 'relational', 'nonrelational', 'analytics'].forEach(initQuiz);
+
+// ===== MIXED TEST =====
+function initMixedQuiz() {
+  const allQuestions = [
+    ...quizData.core,
+    ...quizData.relational,
+    ...quizData.nonrelational,
+    ...quizData.analytics
+  ];
+
+  let questions = [], current = 0, score = 0, wrongAnswers = [], answered = false;
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function pickQuestions() {
+    const copy = shuffle(allQuestions.slice());
+    questions = copy.slice(0, 50).map(q => {
+      const correctText = q.opts[q.ans];
+      const shuffledOpts = shuffle(q.opts.slice());
+      return { q: q.q, opts: shuffledOpts, ans: shuffledOpts.indexOf(correctText), exp: q.exp };
+    });
+    current = 0; score = 0; wrongAnswers = []; answered = false;
+  }
+
+  const pfEl = document.getElementById('qpf-mixed');
+  const numEl = document.getElementById('qnum-mixed');
+  const textEl = document.getElementById('qtext-mixed');
+  const optsEl = document.getElementById('qopts-mixed');
+  const expEl = document.getElementById('qexp-mixed');
+  const nextBtn = document.getElementById('qnext-mixed');
+  const qBlock = document.getElementById('quiz-mixed-q');
+  const resultBlock = document.getElementById('qresult-mixed');
+  const scoreEl = document.getElementById('qscore-mixed');
+  const wrongEl = document.getElementById('qwrong-mixed');
+  const retryBtn = document.getElementById('qretry-mixed');
+
+  function renderQuestion() {
+    answered = false;
+    const q = questions[current];
+    pfEl.style.width = ((current / questions.length) * 100) + '%';
+    numEl.textContent = 'Question ' + (current + 1) + ' of ' + questions.length;
+    textEl.textContent = q.q;
+    expEl.style.display = 'none';
+    nextBtn.style.display = 'none';
+    optsEl.innerHTML = '';
+    q.opts.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option';
+      btn.textContent = opt;
+      btn.addEventListener('click', () => {
+        if (answered) return;
+        answered = true;
+        optsEl.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+        if (i === q.ans) {
+          btn.classList.add('correct');
+          score++;
+        } else {
+          btn.classList.add('wrong');
+          optsEl.querySelectorAll('.quiz-option')[q.ans].classList.add('correct');
+          wrongAnswers.push({ q: q.q, correct: q.opts[q.ans] });
+        }
+        expEl.textContent = q.exp;
+        expEl.style.display = 'block';
+        nextBtn.style.display = 'inline-block';
+      });
+      optsEl.appendChild(btn);
+    });
+  }
+
+  nextBtn.addEventListener('click', () => {
+    current++;
+    if (current >= questions.length) showResult(); else renderQuestion();
+  });
+
+  function showResult() {
+    qBlock.style.display = 'none';
+    resultBlock.style.display = 'block';
+    pfEl.style.width = '100%';
+    scoreEl.textContent = score + '/' + questions.length;
+    wrongEl.innerHTML = wrongAnswers.length === 0
+      ? '<li style="color:var(--success)">Perfect score! All answers correct.</li>'
+      : wrongAnswers.map(w => `<li><strong style="color:var(--text)">${w.q}</strong><br>Correct: ${w.correct}</li>`).join('');
+  }
+
+  retryBtn.addEventListener('click', () => {
+    pickQuestions();
+    qBlock.style.display = 'block';
+    resultBlock.style.display = 'none';
+    renderQuestion();
+  });
+
+  pickQuestions();
+  renderQuestion();
+}
+
+initMixedQuiz();
 </script>
 </body>
 </html>
