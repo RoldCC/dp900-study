@@ -363,6 +363,12 @@
     .quiz-result .wrong-list { margin: 20px 0; text-align: left; }
     .quiz-result .wrong-list li { margin-bottom: 8px; color: var(--text-secondary); font-size: 14px; }
 
+    /* DIAGRAMS */
+    .acc-diagram { margin-top: 14px; }
+    .acc-diagram svg { display: block; width: 100%; height: auto; border-radius: 6px; }
+    .quiz-diagram { margin-top: 12px; display: none; }
+    .quiz-diagram svg { display: block; width: 100%; height: auto; border-radius: 6px; }
+
     /* UTIL */
     .mt-8 { margin-top: 8px; }
     .mt-16 { margin-top: 16px; }
@@ -539,6 +545,7 @@
         <div class="quiz-question-text" id="qtext-core"></div>
         <div class="quiz-options" id="qopts-core"></div>
         <div class="quiz-explanation" id="qexp-core"></div>
+        <div class="quiz-diagram" id="qdiag-core"></div>
         <button class="btn quiz-next" id="qnext-core">Next →</button>
       </div>
       <div class="quiz-result" id="qresult-core">
@@ -724,6 +731,7 @@
         <div class="quiz-question-text" id="qtext-relational"></div>
         <div class="quiz-options" id="qopts-relational"></div>
         <div class="quiz-explanation" id="qexp-relational"></div>
+        <div class="quiz-diagram" id="qdiag-relational"></div>
         <button class="btn quiz-next" id="qnext-relational">Next →</button>
       </div>
       <div class="quiz-result" id="qresult-relational">
@@ -885,6 +893,7 @@
         <div class="quiz-question-text" id="qtext-nonrelational"></div>
         <div class="quiz-options" id="qopts-nonrelational"></div>
         <div class="quiz-explanation" id="qexp-nonrelational"></div>
+        <div class="quiz-diagram" id="qdiag-nonrelational"></div>
         <button class="btn quiz-next" id="qnext-nonrelational">Next →</button>
       </div>
       <div class="quiz-result" id="qresult-nonrelational">
@@ -1144,6 +1153,7 @@
         <div class="quiz-question-text" id="qtext-analytics"></div>
         <div class="quiz-options" id="qopts-analytics"></div>
         <div class="quiz-explanation" id="qexp-analytics"></div>
+        <div class="quiz-diagram" id="qdiag-analytics"></div>
         <button class="btn quiz-next" id="qnext-analytics">Next →</button>
       </div>
       <div class="quiz-result" id="qresult-analytics">
@@ -1166,6 +1176,7 @@
         <div class="quiz-question-text" id="qtext-mixed"></div>
         <div class="quiz-options" id="qopts-mixed"></div>
         <div class="quiz-explanation" id="qexp-mixed"></div>
+        <div class="quiz-diagram" id="qdiag-mixed"></div>
         <button class="btn quiz-next" id="qnext-mixed">Next →</button>
       </div>
       <div class="quiz-result" id="qresult-mixed">
@@ -1750,6 +1761,8 @@ function initQuiz(domain) {
   const wrongEl = document.getElementById('qwrong-' + domain);
   const retryBtn = document.getElementById('qretry-' + domain);
 
+  const diagEl = document.getElementById('qdiag-' + domain);
+
   function renderQuestion() {
     answered = false;
     const q = questions[current];
@@ -1758,6 +1771,7 @@ function initQuiz(domain) {
     textEl.textContent = q.q;
     expEl.style.display = 'none';
     nextBtn.style.display = 'none';
+    if (diagEl) diagEl.style.display = 'none';
     optsEl.innerHTML = '';
     q.opts.forEach((opt, i) => {
       const btn = document.createElement('button');
@@ -1777,6 +1791,10 @@ function initQuiz(domain) {
         }
         expEl.textContent = q.exp;
         expEl.style.display = 'block';
+        if (diagEl && typeof qDiagramMap !== 'undefined' && typeof diagrams !== 'undefined') {
+          const dk = qDiagramMap[q.q];
+          if (dk && diagrams[dk]) { diagEl.innerHTML = diagrams[dk]; diagEl.style.display = 'block'; }
+        }
         nextBtn.style.display = 'inline-block';
       });
       optsEl.appendChild(btn);
@@ -1851,6 +1869,7 @@ function initMixedQuiz() {
   const scoreEl = document.getElementById('qscore-mixed');
   const wrongEl = document.getElementById('qwrong-mixed');
   const retryBtn = document.getElementById('qretry-mixed');
+  const diagElMixed = document.getElementById('qdiag-mixed');
 
   function renderQuestion() {
     answered = false;
@@ -1860,6 +1879,7 @@ function initMixedQuiz() {
     textEl.textContent = q.q;
     expEl.style.display = 'none';
     nextBtn.style.display = 'none';
+    if (diagElMixed) diagElMixed.style.display = 'none';
     optsEl.innerHTML = '';
     q.opts.forEach((opt, i) => {
       const btn = document.createElement('button');
@@ -1879,6 +1899,10 @@ function initMixedQuiz() {
         }
         expEl.textContent = q.exp;
         expEl.style.display = 'block';
+        if (diagElMixed && typeof qDiagramMap !== 'undefined' && typeof diagrams !== 'undefined') {
+          const dk = qDiagramMap[q.q];
+          if (dk && diagrams[dk]) { diagElMixed.innerHTML = diagrams[dk]; diagElMixed.style.display = 'block'; }
+        }
         nextBtn.style.display = 'inline-block';
       });
       optsEl.appendChild(btn);
@@ -1912,6 +1936,935 @@ function initMixedQuiz() {
 }
 
 initMixedQuiz();
+</script>
+<script>
+// ===== ACCORDION + QUIZ DIAGRAMS =====
+const diagrams = {
+
+'data-formats': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <rect x="14" y="14" width="174" height="165" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="101" y="38" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Structured</text>
+  <text x="101" y="58" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Fixed schema • SQL</text>
+  <text x="101" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Tables, rows, columns</text>
+  <text x="101" y="98" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Azure SQL Database</text>
+  <text x="101" y="118" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Spreadsheets</text>
+  <text x="101" y="158" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Schema-on-write</text>
+  <rect x="213" y="14" width="174" height="165" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="300" y="38" text-anchor="middle" fill="#f59e0b" font-size="13" font-family="Inter,sans-serif" font-weight="600">Semi-Structured</text>
+  <text x="300" y="58" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Flexible • tags/keys</text>
+  <text x="300" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">JSON, XML, YAML</text>
+  <text x="300" y="98" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Log files, APIs</text>
+  <text x="300" y="118" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">NoSQL stores</text>
+  <text x="300" y="158" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">NOT unstructured!</text>
+  <rect x="412" y="14" width="174" height="165" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="499" y="38" text-anchor="middle" fill="#ef4444" font-size="13" font-family="Inter,sans-serif" font-weight="600">Unstructured</text>
+  <text x="499" y="58" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">No schema • free-form</text>
+  <text x="499" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Images, video, audio</text>
+  <text x="499" y="98" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">PDFs, documents</text>
+  <text x="499" y="118" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Blob / object store</text>
+  <text x="499" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Schema-on-read</text>
+</svg>`,
+
+'file-formats': `<svg viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="30" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">File Format Comparison</text>
+  <rect x="14" y="40" width="572" height="28" rx="4" fill="#2a2d3e"/>
+  <text x="80" y="59" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Format</text>
+  <text x="200" y="59" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Type</text>
+  <text x="380" y="59" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Best For</text>
+  <text x="530" y="59" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Schema</text>
+  <text x="80" y="90" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="Inter,sans-serif" font-weight="600">CSV</text>
+  <text x="200" y="90" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Row-based text</text>
+  <text x="380" y="90" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Human-readable data</text>
+  <text x="530" y="90" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">None</text>
+  <line x1="14" y1="100" x2="586" y2="100" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="123" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Parquet</text>
+  <text x="200" y="123" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Columnar binary</text>
+  <text x="380" y="123" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Analytics — few cols, many rows</text>
+  <text x="530" y="123" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">In-file</text>
+  <line x1="14" y1="133" x2="586" y2="133" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="156" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="Inter,sans-serif" font-weight="600">Avro</text>
+  <text x="200" y="156" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Row-based binary</text>
+  <text x="380" y="156" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Streaming (schema in header)</text>
+  <text x="530" y="156" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">In-file</text>
+  <line x1="14" y1="166" x2="586" y2="166" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="190" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">Delta Lake</text>
+  <text x="200" y="190" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Parquet + txn log</text>
+  <text x="380" y="190" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">ACID on data lake</text>
+  <text x="530" y="190" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">In-file</text>
+</svg>`,
+
+'databases-relnon': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <rect x="14" y="14" width="265" height="167" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="146" y="38" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Relational (SQL)</text>
+  <text x="146" y="60" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Fixed schema • JOINs • ACID</text>
+  <text x="146" y="82" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Azure SQL Database</text>
+  <text x="146" y="102" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">SQL Managed Instance</text>
+  <text x="146" y="122" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">SQL Server on VM</text>
+  <text x="146" y="155" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Strong consistency</text>
+  <text x="300" y="102" text-anchor="middle" fill="#475569" font-size="18" font-family="Inter,sans-serif">vs</text>
+  <rect x="321" y="14" width="265" height="167" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="453" y="38" text-anchor="middle" fill="#f59e0b" font-size="13" font-family="Inter,sans-serif" font-weight="600">Non-Relational (NoSQL)</text>
+  <text x="453" y="58" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Key-Value: Azure Table Storage</text>
+  <text x="453" y="76" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Document: Cosmos DB NoSQL API</text>
+  <text x="453" y="94" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Column-family: Cosmos Cassandra</text>
+  <text x="453" y="112" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Graph: Cosmos DB Gremlin API</text>
+  <text x="453" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Flexible schema • horizontal scale</text>
+  <text x="453" y="155" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">Eventual / configurable consistency</text>
+</svg>`,
+
+'oltp': `<svg viewBox="0 0 600 190" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="28" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">OLTP — ACID Properties</text>
+  <rect x="14" y="42" width="128" height="90" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="78" y="65" text-anchor="middle" fill="#22c55e" font-size="14" font-family="Inter,sans-serif" font-weight="700">A</text>
+  <text x="78" y="82" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Atomicity</text>
+  <text x="78" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">All-or-nothing</text>
+  <text x="78" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">rollback on failure</text>
+  <rect x="157" y="42" width="128" height="90" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="221" y="65" text-anchor="middle" fill="#6c63ff" font-size="14" font-family="Inter,sans-serif" font-weight="700">C</text>
+  <text x="221" y="82" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Consistency</text>
+  <text x="221" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Valid state</text>
+  <text x="221" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">before and after</text>
+  <rect x="300" y="42" width="128" height="90" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="364" y="65" text-anchor="middle" fill="#f59e0b" font-size="14" font-family="Inter,sans-serif" font-weight="700">I</text>
+  <text x="364" y="82" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Isolation</text>
+  <text x="364" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Concurrent txns</text>
+  <text x="364" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">don't interfere</text>
+  <rect x="443" y="42" width="143" height="90" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="514" y="65" text-anchor="middle" fill="#ef4444" font-size="14" font-family="Inter,sans-serif" font-weight="700">D</text>
+  <text x="514" y="82" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Durability</text>
+  <text x="514" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Committed data</text>
+  <text x="514" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">survives failures</text>
+  <text x="300" y="165" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">OLTP: high-volume short transactions • row-oriented • normalised schema</text>
+</svg>`,
+
+'olap': `<svg viewBox="0 0 600 175" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">OLAP — Analytics Pipeline (ETL / ELT)</text>
+  <rect x="14" y="45" width="90" height="90" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="59" y="80" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Sources</text>
+  <text x="59" y="98" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">OLTP DBs</text>
+  <text x="59" y="114" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Files, APIs</text>
+  <line x1="104" y1="90" x2="148" y2="90" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="148,86 156,90 148,94" fill="#6c63ff"/>
+  <rect x="156" y="45" width="100" height="90" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="206" y="78" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">ETL / ELT</text>
+  <text x="206" y="96" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Extract</text>
+  <text x="206" y="110" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Transform</text>
+  <text x="206" y="124" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Load</text>
+  <line x1="256" y1="90" x2="300" y2="90" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="300,86 308,90 300,94" fill="#6c63ff"/>
+  <rect x="308" y="45" width="110" height="90" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="363" y="75" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Warehouse</text>
+  <text x="363" y="91" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">/ Data Lake</text>
+  <text x="363" y="113" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Synapse / ADLS</text>
+  <line x1="418" y1="90" x2="462" y2="90" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="462,86 470,90 462,94" fill="#6c63ff"/>
+  <rect x="470" y="45" width="116" height="90" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="528" y="80" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">BI / Reports</text>
+  <text x="528" y="98" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Power BI</text>
+  <text x="528" y="114" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Dashboards</text>
+  <text x="300" y="158" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">OLAP: complex queries • historical data • columnar storage • denormalised schema</text>
+</svg>`,
+
+'batch-stream': `<svg viewBox="0 0 600 190" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="28" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Batch vs Stream Processing</text>
+  <text x="60" y="72" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Batch</text>
+  <text x="60" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">High latency</text>
+  <rect x="110" y="58" width="60" height="35" rx="4" fill="#6c63ff44" stroke="#6c63ff" stroke-width="1"/>
+  <text x="140" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Job 1</text>
+  <rect x="210" y="58" width="60" height="35" rx="4" fill="#6c63ff44" stroke="#6c63ff" stroke-width="1"/>
+  <text x="240" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Job 2</text>
+  <rect x="310" y="58" width="60" height="35" rx="4" fill="#6c63ff44" stroke="#6c63ff" stroke-width="1"/>
+  <text x="340" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Job 3</text>
+  <text x="185" y="76" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">gap</text>
+  <text x="285" y="76" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">gap</text>
+  <text x="430" y="76" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Nightly ETL, billing</text>
+  <line x1="14" y1="112" x2="586" y2="112" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="60" y="138" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">Stream</text>
+  <text x="60" y="154" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Low latency</text>
+  <line x1="110" y1="142" x2="390" y2="142" stroke="#22c55e" stroke-width="2"/>
+  <circle cx="130" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="165" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="185" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="215" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="245" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="275" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="305" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="325" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="355" cy="142" r="5" fill="#22c55e"/>
+  <circle cx="380" cy="142" r="5" fill="#22c55e"/>
+  <text x="440" y="146" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">IoT, fraud detection</text>
+  <text x="300" y="178" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">Lambda architecture: batch layer + stream layer combined</text>
+</svg>`,
+
+'relational-fundamentals': `<svg viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Tables Linked by Primary / Foreign Keys</text>
+  <rect x="30" y="40" width="210" height="140" rx="6" fill="#1a1d27" stroke="#6c63ff" stroke-width="1.5"/>
+  <rect x="30" y="40" width="210" height="30" rx="6" fill="#6c63ff"/>
+  <text x="135" y="60" text-anchor="middle" fill="#fff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Customers</text>
+  <line x1="30" y1="70" x2="240" y2="70" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="90" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">CustID (PK)</text>
+  <text x="175" y="90" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Name</text>
+  <line x1="30" y1="98" x2="240" y2="98" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="116" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">1</text>
+  <text x="175" y="116" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Alice</text>
+  <line x1="30" y1="124" x2="240" y2="124" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="142" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">2</text>
+  <text x="175" y="142" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Bob</text>
+  <line x1="30" y1="150" x2="240" y2="150" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="80" y="168" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">3</text>
+  <text x="175" y="168" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Carol</text>
+  <line x1="340" y1="116" x2="280" y2="116" stroke="#f59e0b" stroke-width="1.5"/>
+  <polygon points="280,112 272,116 280,120" fill="#f59e0b"/>
+  <text x="310" y="108" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">FK to PK</text>
+  <rect x="350" y="40" width="230" height="140" rx="6" fill="#1a1d27" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="350" y="40" width="230" height="30" rx="6" fill="#f59e0b30"/>
+  <text x="465" y="60" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">Orders</text>
+  <line x1="350" y1="70" x2="580" y2="70" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="405" y="90" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">OrderID (PK)</text>
+  <text x="510" y="90" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">CustID (FK)</text>
+  <line x1="350" y1="98" x2="580" y2="98" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="405" y="116" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">101</text>
+  <text x="510" y="116" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">1</text>
+  <line x1="350" y1="124" x2="580" y2="124" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="405" y="142" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">102</text>
+  <text x="510" y="142" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">1</text>
+  <line x1="350" y1="150" x2="580" y2="150" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="405" y="168" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">103</text>
+  <text x="510" y="168" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">2</text>
+  <text x="300" y="200" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">Normalisation: split into related tables to eliminate redundancy</text>
+</svg>`,
+
+'sql-ddl-dml': `<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">SQL Language Groups</text>
+  <rect x="14" y="40" width="130" height="145" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="79" y="62" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">DDL</text>
+  <text x="79" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Data Definition</text>
+  <text x="79" y="100" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">CREATE</text>
+  <text x="79" y="118" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">ALTER</text>
+  <text x="79" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">DROP</text>
+  <text x="79" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Defines structure</text>
+  <rect x="160" y="40" width="130" height="145" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="225" y="62" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">DML</text>
+  <text x="225" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Data Manipulation</text>
+  <text x="225" y="100" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">SELECT</text>
+  <text x="225" y="118" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">INSERT</text>
+  <text x="225" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">UPDATE/DELETE</text>
+  <text x="225" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Manipulates data</text>
+  <rect x="306" y="40" width="130" height="145" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="371" y="62" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">DCL</text>
+  <text x="371" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Data Control</text>
+  <text x="371" y="100" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">GRANT</text>
+  <text x="371" y="118" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">REVOKE</text>
+  <text x="371" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">DENY</text>
+  <text x="371" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Controls access</text>
+  <rect x="452" y="40" width="134" height="145" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="519" y="62" text-anchor="middle" fill="#ef4444" font-size="12" font-family="Inter,sans-serif" font-weight="600">TCL</text>
+  <text x="519" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Transaction Control</text>
+  <text x="519" y="100" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">BEGIN TRAN</text>
+  <text x="519" y="118" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">COMMIT</text>
+  <text x="519" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">ROLLBACK</text>
+  <text x="519" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Manages transactions</text>
+</svg>`,
+
+'azure-sql-db': `<svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure SQL Database — PaaS Responsibility Model</text>
+  <rect x="14" y="42" width="278" height="130" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="153" y="63" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">Azure Manages</text>
+  <text x="153" y="84" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Hardware infrastructure</text>
+  <text x="153" y="102" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">OS patching and updates</text>
+  <text x="153" y="120" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Database engine patches</text>
+  <text x="153" y="138" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">High availability (99.99% SLA)</text>
+  <text x="153" y="156" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Geo-redundant backups</text>
+  <rect x="308" y="42" width="278" height="130" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="447" y="63" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">You Manage</text>
+  <text x="447" y="84" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Database schema</text>
+  <text x="447" y="102" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Tables and indexes</text>
+  <text x="447" y="120" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Queries and stored procs</text>
+  <text x="447" y="138" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Data and security rules</text>
+  <text x="447" y="156" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Connection strings</text>
+</svg>`,
+
+'sql-managed-instance': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure SQL Service Comparison</text>
+  <rect x="14" y="38" width="572" height="28" rx="4" fill="#2a2d3e"/>
+  <text x="100" y="57" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Azure SQL DB</text>
+  <text x="300" y="57" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">SQL Managed Instance</text>
+  <text x="490" y="57" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">SQL Server on VM</text>
+  <text x="300" y="85" text-anchor="middle" fill="#6c63ff" font-size="10" font-family="Inter,sans-serif" font-weight="600">Service Model</text>
+  <text x="100" y="100" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">PaaS</text>
+  <text x="300" y="100" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">PaaS</text>
+  <text x="490" y="100" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif">IaaS</text>
+  <line x1="14" y1="108" x2="586" y2="108" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="300" y="123" text-anchor="middle" fill="#6c63ff" font-size="10" font-family="Inter,sans-serif" font-weight="600">SQL Server Compatibility</text>
+  <text x="100" y="138" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Most features</text>
+  <text x="300" y="138" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">~100% compat</text>
+  <text x="490" y="138" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">100% compat</text>
+  <line x1="14" y1="146" x2="586" y2="146" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="300" y="161" text-anchor="middle" fill="#6c63ff" font-size="10" font-family="Inter,sans-serif" font-weight="600">Best For</text>
+  <text x="100" y="178" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">New cloud-native apps</text>
+  <text x="300" y="178" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">Lift-and-shift migration</text>
+  <text x="490" y="178" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Full OS/SQL control</text>
+</svg>`,
+
+'sql-vm': `<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">IaaS vs PaaS vs SaaS — Responsibility Stack</text>
+  <rect x="40" y="42" width="150" height="148" rx="6" fill="#1a1d27" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="115" y="60" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">IaaS (SQL on VM)</text>
+  <rect x="52" y="68" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="115" y="84" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Hardware (Azure)</text>
+  <rect x="52" y="96" width="126" height="24" rx="4" fill="#6c63ff44"/>
+  <text x="115" y="112" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">OS (You)</text>
+  <rect x="52" y="124" width="126" height="24" rx="4" fill="#6c63ff44"/>
+  <text x="115" y="140" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">SQL Server (You)</text>
+  <rect x="52" y="152" width="126" height="24" rx="4" fill="#6c63ff44"/>
+  <text x="115" y="168" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Data (You)</text>
+  <rect x="225" y="42" width="150" height="148" rx="6" fill="#1a1d27" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="300" y="60" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">PaaS (SQL DB / MI)</text>
+  <rect x="237" y="68" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="300" y="84" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Hardware (Azure)</text>
+  <rect x="237" y="96" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="300" y="112" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">OS (Azure)</text>
+  <rect x="237" y="124" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="300" y="140" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">SQL Server (Azure)</text>
+  <rect x="237" y="152" width="126" height="24" rx="4" fill="#22c55e44"/>
+  <text x="300" y="168" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Data (You)</text>
+  <rect x="410" y="42" width="150" height="148" rx="6" fill="#1a1d27" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="485" y="60" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">SaaS (e.g. Fabric)</text>
+  <rect x="422" y="68" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="485" y="84" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Hardware (Azure)</text>
+  <rect x="422" y="96" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="485" y="112" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">OS (Azure)</text>
+  <rect x="422" y="124" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="485" y="140" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Platform (Azure)</text>
+  <rect x="422" y="152" width="126" height="24" rx="4" fill="#475569"/>
+  <text x="485" y="168" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">App (Azure)</text>
+</svg>`,
+
+'sql-joins': `<svg viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">SQL JOINs and Query Execution Order</text>
+  <circle cx="105" cy="110" r="46" fill="#6c63ff30" stroke="#6c63ff" stroke-width="1.5"/>
+  <circle cx="145" cy="110" r="46" fill="#6c63ff30" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="125" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif" font-weight="600">INNER JOIN</text>
+  <text x="125" y="95" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Matched rows only</text>
+  <text x="125" y="115" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">intersection</text>
+  <text x="88" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">A</text>
+  <text x="162" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">B</text>
+  <circle cx="295" cy="110" r="46" fill="#f59e0b40" stroke="#f59e0b" stroke-width="2"/>
+  <circle cx="335" cy="110" r="46" fill="#f59e0b15" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="315" y="80" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif" font-weight="600">LEFT JOIN</text>
+  <text x="315" y="95" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">All rows from left</text>
+  <text x="315" y="110" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">table + matched</text>
+  <text x="315" y="126" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">NULLs if unmatched</text>
+  <text x="278" y="158" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">A (all)</text>
+  <text x="352" y="158" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">B</text>
+  <rect x="455" y="50" width="132" height="120" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1"/>
+  <text x="521" y="70" text-anchor="middle" fill="#6c63ff" font-size="10" font-family="Inter,sans-serif" font-weight="600">Query Order</text>
+  <text x="521" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">1. FROM / JOIN</text>
+  <text x="521" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">2. WHERE</text>
+  <text x="521" y="120" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">3. GROUP BY</text>
+  <text x="521" y="136" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">4. HAVING</text>
+  <text x="521" y="152" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">5. SELECT</text>
+  <text x="521" y="168" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">6. ORDER BY</text>
+</svg>`,
+
+'sql-constraints': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">SQL Constraints and Programmability</text>
+  <rect x="14" y="38" width="572" height="26" rx="4" fill="#2a2d3e"/>
+  <text x="130" y="55" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Constraint / Object</text>
+  <text x="400" y="55" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">What it does</text>
+  <text x="130" y="80" text-anchor="middle" fill="#22c55e" font-size="11" font-family="monospace">PRIMARY KEY</text>
+  <text x="400" y="80" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Uniquely identifies each row; NOT NULL + UNIQUE</text>
+  <line x1="14" y1="88" x2="586" y2="88" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="130" y="108" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="monospace">FOREIGN KEY</text>
+  <text x="400" y="108" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">References a PK in another table</text>
+  <line x1="14" y1="116" x2="586" y2="116" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="130" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="monospace">IDENTITY</text>
+  <text x="400" y="136" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Auto-generates sequential integers (surrogate key)</text>
+  <line x1="14" y1="144" x2="586" y2="144" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="130" y="164" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="monospace">Stored Procedure</text>
+  <text x="400" y="164" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Named pre-compiled SQL block; called explicitly</text>
+  <line x1="14" y1="172" x2="586" y2="172" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="130" y="188" text-anchor="middle" fill="#ef4444" font-size="11" font-family="monospace">Trigger</text>
+  <text x="400" y="188" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Fires automatically on INSERT / UPDATE / DELETE</text>
+</svg>`,
+
+'blob-storage': `<svg viewBox="0 0 600 215" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Blob Storage — Types and Access Tiers</text>
+  <rect x="14" y="40" width="173" height="100" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="100" y="60" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Block Blob</text>
+  <text x="100" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Text and binary files</text>
+  <text x="100" y="96" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Most common type</text>
+  <text x="100" y="114" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Parquet, CSV, images</text>
+  <rect x="213" y="40" width="174" height="100" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="300" y="60" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">Append Blob</text>
+  <text x="300" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Append-only writes</text>
+  <text x="300" y="96" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Log files, audit trails</text>
+  <text x="300" y="114" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Cannot edit existing data</text>
+  <rect x="413" y="40" width="173" height="100" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="500" y="60" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">Page Blob</text>
+  <text x="500" y="78" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Random read/write</text>
+  <text x="500" y="96" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Azure VM OS disks</text>
+  <text x="500" y="114" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">512-byte page units</text>
+  <text x="300" y="158" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Access Tiers (cost vs retrieval speed)</text>
+  <text x="75" y="178" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Hot</text>
+  <text x="75" y="194" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Frequent access</text>
+  <text x="225" y="178" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Cool</text>
+  <text x="225" y="194" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Infrequent (&gt;30d)</text>
+  <text x="375" y="178" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Cold</text>
+  <text x="375" y="194" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Rare (&gt;90d)</text>
+  <text x="525" y="178" text-anchor="middle" fill="#ef4444" font-size="11" font-family="Inter,sans-serif" font-weight="600">Archive</text>
+  <text x="525" y="194" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Offline (rehydrate)</text>
+  <line x1="30" y1="208" x2="570" y2="208" stroke="#2a2d3e" stroke-width="1"/>
+  <polygon points="570,204 578,208 570,212" fill="#475569"/>
+  <text x="300" y="208" text-anchor="middle" fill="#475569" font-size="9" font-family="Inter,sans-serif">lower storage cost →</text>
+</svg>`,
+
+'azure-files': `<svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Files — Managed Cloud File Shares</text>
+  <rect x="220" y="50" width="160" height="85" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="300" y="75" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Azure File Share</text>
+  <text x="300" y="95" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Fully managed</text>
+  <text x="300" y="113" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Up to 100 TiB</text>
+  <rect x="30" y="60" width="130" height="65" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="95" y="83" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Windows</text>
+  <text x="95" y="101" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">SMB 2.1 / 3.x</text>
+  <text x="95" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Map as drive Z:</text>
+  <line x1="160" y1="92" x2="220" y2="92" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <rect x="440" y="60" width="140" height="65" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="510" y="83" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Linux / macOS</text>
+  <text x="510" y="101" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif">NFS 4.1 / SMB</text>
+  <text x="510" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">mount /mnt/share</text>
+  <line x1="380" y1="92" x2="440" y2="92" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <rect x="14" y="150" width="572" height="28" rx="4" fill="#2a2d3e"/>
+  <text x="300" y="168" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">Azure File Sync: cache frequently used files on-premises, tier rest to cloud</text>
+</svg>`,
+
+'table-storage': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Table Storage — NoSQL Key-Value Store</text>
+  <rect x="14" y="38" width="572" height="130" rx="6" fill="#1a1d27" stroke="#2a2d3e" stroke-width="1"/>
+  <rect x="14" y="38" width="572" height="28" rx="4" fill="#2a2d3e"/>
+  <text x="100" y="57" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">PartitionKey</text>
+  <text x="230" y="57" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">RowKey</text>
+  <text x="380" y="57" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Column A</text>
+  <text x="510" y="57" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">Column B</text>
+  <line x1="14" y1="66" x2="586" y2="66" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="100" y="84" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">Europe</text>
+  <text x="230" y="84" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">user_001</text>
+  <text x="380" y="84" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Alice</text>
+  <text x="510" y="84" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Paris</text>
+  <line x1="14" y1="92" x2="586" y2="92" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="100" y="110" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">Europe</text>
+  <text x="230" y="110" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">user_002</text>
+  <text x="380" y="110" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Bob</text>
+  <text x="510" y="110" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif">(no value)</text>
+  <line x1="14" y1="118" x2="586" y2="118" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="100" y="136" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">Americas</text>
+  <text x="230" y="136" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif">user_003</text>
+  <text x="380" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Carol</text>
+  <text x="510" y="136" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">New York</text>
+  <line x1="14" y1="144" x2="586" y2="144" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="100" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Controls partition</text>
+  <text x="230" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Unique in partition</text>
+  <text x="300" y="183" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">Schema-less: rows can have different columns • No JOINs • No SQL</text>
+</svg>`,
+
+'cosmos-db': `<svg viewBox="0 0 600 175" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Cosmos DB — Resource Hierarchy</text>
+  <rect x="14" y="42" width="120" height="100" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="74" y="68" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Account</text>
+  <text x="74" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Endpoint URL</text>
+  <text x="74" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Region config</text>
+  <text x="74" y="120" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">API type (fixed)</text>
+  <line x1="134" y1="92" x2="164" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="164,88 172,92 164,96" fill="#6c63ff"/>
+  <rect x="172" y="42" width="120" height="100" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="232" y="68" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Database</text>
+  <text x="232" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Namespace</text>
+  <text x="232" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Shared throughput</text>
+  <text x="232" y="120" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">(optional)</text>
+  <line x1="292" y1="92" x2="322" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="322,88 330,92 322,96" fill="#6c63ff"/>
+  <rect x="330" y="42" width="120" height="100" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="390" y="68" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Container</text>
+  <text x="390" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Partition key</text>
+  <text x="390" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Throughput (RU/s)</text>
+  <text x="390" y="120" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Indexes</text>
+  <line x1="450" y1="92" x2="480" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="480,88 488,92 480,96" fill="#6c63ff"/>
+  <rect x="488" y="42" width="98" height="100" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="537" y="68" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Items</text>
+  <text x="537" y="88" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">JSON docs</text>
+  <text x="537" y="104" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Vertices/Edges</text>
+  <text x="537" y="120" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Rows / KV</text>
+  <text x="300" y="162" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">99.999% SLA • single-digit ms latency • multi-region active-active</text>
+</svg>`,
+
+'cosmos-apis': `<svg viewBox="0 0 600 175" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Cosmos DB APIs — Choose at Account Creation</text>
+  <rect x="10" y="42" width="106" height="110" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="63" y="65" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">NoSQL API</text>
+  <text x="63" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">JSON docs</text>
+  <text x="63" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Native SDK</text>
+  <text x="63" y="119" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">SQL dialect</text>
+  <text x="63" y="136" text-anchor="middle" fill="#22c55e" font-size="9" font-family="Inter,sans-serif">Default/Native</text>
+  <rect x="125" y="42" width="106" height="110" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="178" y="65" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">MongoDB API</text>
+  <text x="178" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">BSON docs</text>
+  <text x="178" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">MongoDB wire</text>
+  <text x="178" y="119" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">protocol compat</text>
+  <text x="178" y="136" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Document model</text>
+  <rect x="240" y="42" width="106" height="110" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="293" y="65" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Table API</text>
+  <text x="293" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Key-value</text>
+  <text x="293" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Table Storage</text>
+  <text x="293" y="119" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">drop-in replace</text>
+  <text x="293" y="136" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter,sans-serif">Migrate w/o code</text>
+  <rect x="355" y="42" width="106" height="110" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="408" y="65" text-anchor="middle" fill="#ef4444" font-size="11" font-family="Inter,sans-serif" font-weight="600">Cassandra API</text>
+  <text x="408" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Column-family</text>
+  <text x="408" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">CQL compat</text>
+  <text x="408" y="119" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Wide-column</text>
+  <text x="408" y="136" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Sparse data</text>
+  <rect x="470" y="42" width="116" height="110" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="528" y="65" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Gremlin API</text>
+  <text x="528" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Graph model</text>
+  <text x="528" y="102" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Vertices + Edges</text>
+  <text x="528" y="119" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Traversal queries</text>
+  <text x="528" y="136" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Inter,sans-serif">Social networks</text>
+  <text x="300" y="165" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">API is set at account creation and cannot be changed later</text>
+</svg>`,
+
+'storage-redundancy': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Storage Redundancy Options</text>
+  <rect x="10" y="40" width="133" height="130" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="77" y="60" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">LRS</text>
+  <text x="77" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">3 copies</text>
+  <text x="77" y="94" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">1 datacenter</text>
+  <text x="77" y="112" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Cheapest</text>
+  <text x="77" y="130" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Inter,sans-serif">No DC protection</text>
+  <text x="77" y="148" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Single region only</text>
+  <rect x="154" y="40" width="133" height="130" rx="6" fill="#2a2d3e" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="220" y="60" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">ZRS</text>
+  <text x="220" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">3 copies</text>
+  <text x="220" y="94" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">3 AZs, 1 region</text>
+  <text x="220" y="112" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Zone failure OK</text>
+  <text x="220" y="130" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Inter,sans-serif">No geo protection</text>
+  <text x="220" y="148" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Single region</text>
+  <rect x="298" y="40" width="133" height="130" rx="6" fill="#2a2d3e" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="364" y="60" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">GRS</text>
+  <text x="364" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">LRS primary</text>
+  <text x="364" y="94" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">+ async secondary</text>
+  <text x="364" y="112" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Geo protection</text>
+  <text x="364" y="130" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">No AZ protection</text>
+  <text x="364" y="148" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">2 regions</text>
+  <rect x="442" y="40" width="148" height="130" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="2"/>
+  <text x="516" y="60" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">GZRS</text>
+  <text x="516" y="78" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">ZRS primary</text>
+  <text x="516" y="94" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">+ async secondary</text>
+  <text x="516" y="112" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Geo + AZ safe</text>
+  <text x="516" y="130" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Most resilient</text>
+  <text x="516" y="148" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter,sans-serif">Highest cost</text>
+  <text x="300" y="184" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">RA-GRS / RA-GZRS: adds read access to secondary region without failover</text>
+</svg>`,
+
+'medallion-architecture': `<svg viewBox="0 0 600 175" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Medallion Architecture (Bronze / Silver / Gold)</text>
+  <rect x="14" y="44" width="156" height="105" rx="6" fill="#c2410c18" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="92" y="68" text-anchor="middle" fill="#c2410c" font-size="14" font-family="Inter,sans-serif" font-weight="700">Bronze</text>
+  <text x="92" y="87" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Raw ingestion</text>
+  <text x="92" y="105" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">No transformation</text>
+  <text x="92" y="122" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Source data as-is</text>
+  <line x1="170" y1="96" x2="208" y2="96" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="208,92 216,96 208,100" fill="#6c63ff"/>
+  <rect x="216" y="44" width="166" height="105" rx="6" fill="#64748b18" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="299" y="68" text-anchor="middle" fill="#94a3b8" font-size="14" font-family="Inter,sans-serif" font-weight="700">Silver</text>
+  <text x="299" y="87" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Cleaned + conformed</text>
+  <text x="299" y="105" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Deduplicated</text>
+  <text x="299" y="122" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Validated, joined</text>
+  <line x1="382" y1="96" x2="420" y2="96" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="420,92 428,96 420,100" fill="#6c63ff"/>
+  <rect x="428" y="44" width="158" height="105" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="2"/>
+  <text x="507" y="68" text-anchor="middle" fill="#f59e0b" font-size="14" font-family="Inter,sans-serif" font-weight="700">Gold</text>
+  <text x="507" y="87" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Business-ready</text>
+  <text x="507" y="105" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Aggregated KPIs</text>
+  <text x="507" y="122" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">BI / Power BI ready</text>
+  <text x="300" y="164" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">Associated with Azure Databricks and Delta Lake</text>
+</svg>`,
+
+'adf': `<svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Data Factory — Components</text>
+  <rect x="10" y="44" width="130" height="110" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="75" y="65" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Linked Service</text>
+  <text x="75" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Connection string</text>
+  <text x="75" y="99" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">to data store</text>
+  <text x="75" y="115" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">or compute</text>
+  <text x="75" y="136" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">SQL, Blob, etc.</text>
+  <line x1="140" y1="99" x2="168" y2="99" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="168,95 176,99 168,103" fill="#6c63ff"/>
+  <rect x="176" y="44" width="110" height="110" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="231" y="65" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Dataset</text>
+  <text x="231" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Named reference</text>
+  <text x="231" y="99" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">to data within</text>
+  <text x="231" y="115" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">linked service</text>
+  <text x="231" y="136" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Schema shape</text>
+  <line x1="286" y1="99" x2="314" y2="99" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="314,95 322,99 314,103" fill="#6c63ff"/>
+  <rect x="322" y="44" width="120" height="110" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="382" y="65" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Pipeline</text>
+  <text x="382" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Logical grouping</text>
+  <text x="382" y="99" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">of activities</text>
+  <text x="382" y="115" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Triggered on</text>
+  <text x="382" y="131" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">schedule or event</text>
+  <line x1="442" y1="99" x2="470" y2="99" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="470,95 478,99 470,103" fill="#6c63ff"/>
+  <rect x="478" y="44" width="108" height="110" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="532" y="65" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Activity</text>
+  <text x="532" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Single step</text>
+  <text x="532" y="99" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Copy, Spark,</text>
+  <text x="532" y="115" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Stored Proc</text>
+  <text x="532" y="131" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Web call</text>
+  <text x="300" y="173" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">ADF = orchestration only — it moves data, it does not store or query it</text>
+</svg>`,
+
+'adls-gen2': `<svg viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">ADLS Gen2 = Blob Storage + Hierarchical Namespace</text>
+  <rect x="14" y="44" width="200" height="110" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="114" y="66" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="Inter,sans-serif" font-weight="600">Blob Storage</text>
+  <text x="114" y="84" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Flat namespace</text>
+  <text x="114" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Containers / blobs</text>
+  <text x="114" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Low cost, durable</text>
+  <text x="114" y="134" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Access tiers</text>
+  <text x="240" y="104" text-anchor="middle" fill="#6c63ff" font-size="28" font-family="Inter,sans-serif">+</text>
+  <rect x="268" y="44" width="160" height="110" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="348" y="66" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">HNS</text>
+  <text x="348" y="84" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">True directories</text>
+  <text x="348" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Atomic rename/delete</text>
+  <text x="348" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">POSIX ACLs</text>
+  <text x="348" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">O(1) dir operations</text>
+  <text x="452" y="104" text-anchor="middle" fill="#6c63ff" font-size="28" font-family="Inter,sans-serif">=</text>
+  <rect x="472" y="44" width="118" height="110" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="2"/>
+  <text x="531" y="66" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">ADLS Gen2</text>
+  <text x="531" y="84" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Analytics-ready</text>
+  <text x="531" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Spark / Hadoop</text>
+  <text x="531" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Synapse / ADB</text>
+  <text x="531" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Data lake</text>
+  <text x="300" y="168" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">Enable HNS on a Blob Storage account to create ADLS Gen2</text>
+</svg>`,
+
+'synapse-analytics': `<svg viewBox="0 0 600 195" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Synapse Analytics — Four Capabilities</text>
+  <rect x="10" y="44" width="135" height="120" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="78" y="66" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Dedicated SQL</text>
+  <text x="78" y="82" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Pool</text>
+  <text x="78" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">MPP data warehouse</text>
+  <text x="78" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Provisioned compute</text>
+  <text x="78" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">T-SQL queries</text>
+  <text x="78" y="148" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">Pay always-on</text>
+  <rect x="157" y="44" width="140" height="120" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="227" y="66" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Serverless SQL</text>
+  <text x="227" y="82" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Pool</text>
+  <text x="227" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Query lake files</text>
+  <text x="227" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">No provisioning</text>
+  <text x="227" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Parquet, CSV, JSON</text>
+  <text x="227" y="148" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif">Pay-per-TB scanned</text>
+  <rect x="309" y="44" width="135" height="120" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="377" y="66" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Apache Spark</text>
+  <text x="377" y="82" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Pool</text>
+  <text x="377" y="100" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Notebooks (Py/Scala)</text>
+  <text x="377" y="116" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Data engineering</text>
+  <text x="377" y="132" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">ML workloads</text>
+  <text x="377" y="148" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Managed Spark</text>
+  <rect x="456" y="44" width="130" height="120" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="521" y="66" text-anchor="middle" fill="#ef4444" font-size="11" font-family="Inter,sans-serif" font-weight="600">Synapse Link</text>
+  <text x="521" y="96" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Near-real-time</text>
+  <text x="521" y="112" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">analytics on</text>
+  <text x="521" y="128" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Cosmos DB data</text>
+  <text x="521" y="148" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">No ETL needed</text>
+  <text x="300" y="180" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">All pools share Synapse Studio + ADLS Gen2 storage in one workspace</text>
+</svg>`,
+
+'databricks': `<svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Databricks — Technology Stack</text>
+  <rect x="80" y="148" width="440" height="30" rx="4" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="300" y="167" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="Inter,sans-serif" font-weight="600">ADLS Gen2 / Azure Blob (storage layer)</text>
+  <rect x="80" y="112" width="440" height="32" rx="4" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="300" y="132" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Delta Lake (ACID transactions on Parquet files)</text>
+  <rect x="80" y="76" width="440" height="32" rx="4" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="300" y="96" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Apache Spark (distributed compute engine)</text>
+  <rect x="80" y="44" width="210" height="28" rx="4" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="185" y="62" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">MLflow (ML tracking)</text>
+  <rect x="310" y="44" width="210" height="28" rx="4" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="415" y="62" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Unity Catalog (governance)</text>
+</svg>`,
+
+'fabric': `<svg viewBox="0 0 600 215" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Microsoft Fabric — OneLake at the Centre</text>
+  <rect x="208" y="82" width="184" height="70" rx="8" fill="#6c63ff44" stroke="#6c63ff" stroke-width="2"/>
+  <text x="300" y="110" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="700">OneLake</text>
+  <text x="300" y="128" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Tenant-wide Delta Lake</text>
+  <text x="300" y="144" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Single copy of data</text>
+  <rect x="16" y="44" width="140" height="54" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="86" y="66" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Fabric Lakehouse</text>
+  <text x="86" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Delta + SQL endpoint</text>
+  <line x1="156" y1="71" x2="208" y2="107" stroke="#6c63ff" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="16" y="130" width="140" height="54" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="86" y="152" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Fabric Warehouse</text>
+  <text x="86" y="169" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">SQL Server-like DW</text>
+  <line x1="156" y1="157" x2="208" y2="134" stroke="#6c63ff" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="444" y="44" width="140" height="54" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="514" y="66" text-anchor="middle" fill="#ef4444" font-size="11" font-family="Inter,sans-serif" font-weight="600">Data Factory</text>
+  <text x="514" y="83" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">ETL / ELT pipelines</text>
+  <line x1="444" y1="71" x2="392" y2="107" stroke="#6c63ff" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="444" y="130" width="140" height="54" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="514" y="152" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Power BI</text>
+  <text x="514" y="169" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Direct Lake mode</text>
+  <line x1="444" y1="157" x2="392" y2="134" stroke="#6c63ff" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="300" y="202" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">SaaS: all workloads share OneLake — no data copying between silos</text>
+</svg>`,
+
+'stream-analytics': `<svg viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="24" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Stream Analytics — Window Types</text>
+  <line x1="20" y1="195" x2="580" y2="195" stroke="#2a2d3e" stroke-width="1"/>
+  <text x="300" y="210" text-anchor="middle" fill="#475569" font-size="9" font-family="Inter,sans-serif">time →</text>
+  <circle cx="60" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="100" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="140" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="190" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="240" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="290" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="340" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="390" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="440" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="490" cy="195" r="3" fill="#6c63ff"/>
+  <circle cx="540" cy="195" r="3" fill="#6c63ff"/>
+  <text x="110" y="42" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">Tumbling</text>
+  <text x="110" y="56" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Non-overlapping</text>
+  <rect x="40" y="63" width="140" height="22" rx="3" fill="#22c55e33" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="110" y="78" text-anchor="middle" fill="#22c55e" font-size="9" font-family="Inter,sans-serif">Window 1</text>
+  <rect x="186" y="63" width="140" height="22" rx="3" fill="#22c55e33" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="256" y="78" text-anchor="middle" fill="#22c55e" font-size="9" font-family="Inter,sans-serif">Window 2</text>
+  <rect x="332" y="63" width="140" height="22" rx="3" fill="#22c55e33" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="402" y="78" text-anchor="middle" fill="#22c55e" font-size="9" font-family="Inter,sans-serif">Window 3</text>
+  <text x="300" y="104" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">Hopping (overlapping fixed-size windows)</text>
+  <rect x="40" y="110" width="140" height="22" rx="3" fill="#f59e0b33" stroke="#f59e0b" stroke-width="1.5"/>
+  <rect x="110" y="110" width="140" height="22" rx="3" fill="#f59e0b22" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="180" y="110" width="140" height="22" rx="3" fill="#f59e0b22" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="310" y="125" text-anchor="middle" fill="#f59e0b" font-size="9" font-family="Inter,sans-serif">Hop interval &lt; window size = overlap</text>
+  <text x="300" y="149" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Session (inactivity gap closes window)</text>
+  <rect x="40" y="155" width="80" height="22" rx="3" fill="#6c63ff33" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="80" y="170" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Inter,sans-serif">Session 1</text>
+  <rect x="290" y="155" width="120" height="22" rx="3" fill="#6c63ff33" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="350" y="170" text-anchor="middle" fill="#6c63ff" font-size="9" font-family="Inter,sans-serif">Session 2</text>
+  <line x1="120" y1="166" x2="290" y2="166" stroke="#475569" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="205" y="162" text-anchor="middle" fill="#475569" font-size="8" font-family="Inter,sans-serif">gap (timeout)</text>
+  <text x="300" y="221" text-anchor="middle" fill="#475569" font-size="10" font-family="Inter,sans-serif">Sliding: fires on every event enter/exit — useful for rolling aggregations</text>
+</svg>`,
+
+'power-bi': `<svg viewBox="0 0 600 210" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Power BI — Components and Workspace Roles</text>
+  <rect x="14" y="42" width="160" height="100" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="94" y="65" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Desktop</text>
+  <text x="94" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Build data models</text>
+  <text x="94" y="101" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Author reports</text>
+  <text x="94" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Free Windows app</text>
+  <text x="94" y="133" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">Produces .pbix file</text>
+  <line x1="174" y1="92" x2="212" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="212,88 220,92 212,96" fill="#6c63ff"/>
+  <text x="193" y="83" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter,sans-serif">Publish</text>
+  <rect x="220" y="42" width="160" height="100" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="300" y="65" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">Service</text>
+  <text x="300" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Publish + share</text>
+  <text x="300" y="101" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Schedule refresh</text>
+  <text x="300" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Create dashboards</text>
+  <text x="300" y="133" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Manage workspaces</text>
+  <line x1="380" y1="92" x2="418" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="418,88 426,92 418,96" fill="#6c63ff"/>
+  <text x="399" y="83" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="Inter,sans-serif">View</text>
+  <rect x="426" y="42" width="160" height="100" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="506" y="65" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">Mobile</text>
+  <text x="506" y="85" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Consume on devices</text>
+  <text x="506" y="101" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">iOS, Android</text>
+  <text x="506" y="117" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Read-only access</text>
+  <text x="506" y="133" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Alerts + tiles</text>
+  <text x="300" y="163" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Workspace Roles</text>
+  <text x="90" y="180" text-anchor="middle" fill="#ef4444" font-size="10" font-family="Inter,sans-serif" font-weight="600">Admin</text>
+  <text x="220" y="180" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif" font-weight="600">Member</text>
+  <text x="370" y="180" text-anchor="middle" fill="#22c55e" font-size="10" font-family="Inter,sans-serif" font-weight="600">Contributor</text>
+  <text x="510" y="180" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif" font-weight="600">Viewer</text>
+  <text x="90" y="196" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Full control</text>
+  <text x="220" y="196" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Publish + share</text>
+  <text x="370" y="196" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Publish + edit</text>
+  <text x="510" y="196" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">Read-only</text>
+</svg>`,
+
+'star-schema': `<svg viewBox="0 0 600 230" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="24" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Star Schema — Fact Table + Dimension Tables</text>
+  <rect x="210" y="82" width="180" height="80" rx="6" fill="#6c63ff44" stroke="#6c63ff" stroke-width="2"/>
+  <text x="300" y="105" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="700">FACT TABLE</text>
+  <text x="300" y="122" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">Numeric measures</text>
+  <text x="300" y="138" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">FK to all dimensions</text>
+  <text x="300" y="154" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="Inter,sans-serif">SalesAmount, Quantity</text>
+  <rect x="218" y="14" width="164" height="55" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="300" y="36" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif" font-weight="600">DimDate</text>
+  <text x="300" y="54" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">DateKey, Year, Month, Day</text>
+  <line x1="300" y1="69" x2="300" y2="82" stroke="#f59e0b" stroke-width="1.5"/>
+  <polygon points="296,82 300,90 304,82" fill="#f59e0b"/>
+  <rect x="14" y="88" width="165" height="55" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="97" y="110" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">DimProduct</text>
+  <text x="97" y="128" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">ProductKey, Name, Category</text>
+  <line x1="179" y1="115" x2="210" y2="115" stroke="#22c55e" stroke-width="1.5"/>
+  <polygon points="210,111 218,115 210,119" fill="#22c55e"/>
+  <rect x="421" y="88" width="165" height="55" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="503" y="110" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">DimCustomer</text>
+  <text x="503" y="128" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">CustomerKey, Name, City</text>
+  <line x1="421" y1="115" x2="390" y2="115" stroke="#22c55e" stroke-width="1.5"/>
+  <polygon points="390,111 382,115 390,119" fill="#22c55e"/>
+  <rect x="218" y="178" width="164" height="42" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="300" y="198" text-anchor="middle" fill="#ef4444" font-size="11" font-family="Inter,sans-serif" font-weight="600">DimStore</text>
+  <text x="300" y="213" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">StoreKey, Region, Manager</text>
+  <line x1="300" y1="178" x2="300" y2="162" stroke="#ef4444" stroke-width="1.5"/>
+  <polygon points="296,162 300,154 304,162" fill="#ef4444"/>
+</svg>`,
+
+'hdinsight': `<svg viewBox="0 0 600 185" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure HDInsight — Open-Source Cluster Types</text>
+  <rect x="14" y="44" width="175" height="60" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="102" y="67" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="Inter,sans-serif" font-weight="600">Hadoop</text>
+  <text x="102" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">MapReduce batch processing</text>
+  <rect x="213" y="44" width="175" height="60" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="1.5"/>
+  <text x="301" y="67" text-anchor="middle" fill="#6c63ff" font-size="12" font-family="Inter,sans-serif" font-weight="600">Apache Spark</text>
+  <text x="301" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">In-memory distributed compute</text>
+  <rect x="412" y="44" width="174" height="60" rx="6" fill="#f59e0b18" stroke="#f59e0b" stroke-width="1.5"/>
+  <text x="499" y="67" text-anchor="middle" fill="#f59e0b" font-size="12" font-family="Inter,sans-serif" font-weight="600">Apache Hive</text>
+  <text x="499" y="86" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">SQL-like queries on Hadoop</text>
+  <rect x="14" y="120" width="175" height="55" rx="6" fill="#ef444418" stroke="#ef4444" stroke-width="1.5"/>
+  <text x="102" y="142" text-anchor="middle" fill="#ef4444" font-size="12" font-family="Inter,sans-serif" font-weight="600">Apache HBase</text>
+  <text x="102" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">NoSQL wide-column store</text>
+  <rect x="213" y="120" width="175" height="55" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="301" y="142" text-anchor="middle" fill="#22c55e" font-size="12" font-family="Inter,sans-serif" font-weight="600">Apache Kafka</text>
+  <text x="301" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Event streaming platform</text>
+  <rect x="412" y="120" width="174" height="55" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="499" y="142" text-anchor="middle" fill="#e2e8f0" font-size="12" font-family="Inter,sans-serif" font-weight="600">Apache Storm</text>
+  <text x="499" y="160" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Real-time stream processing</text>
+</svg>`,
+
+'analysis-services': `<svg viewBox="0 0 600 175" xmlns="http://www.w3.org/2000/svg" style="background:#1e2130;border-radius:8px;width:100%">
+  <text x="300" y="26" text-anchor="middle" fill="#6c63ff" font-size="13" font-family="Inter,sans-serif" font-weight="600">Azure Analysis Services — Tabular Semantic Model</text>
+  <rect x="14" y="50" width="130" height="85" rx="6" fill="#2a2d3e" stroke="#475569" stroke-width="1.5"/>
+  <text x="79" y="75" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif" font-weight="600">Data Warehouse</text>
+  <text x="79" y="93" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Synapse / SQL DB</text>
+  <text x="79" y="110" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Raw star schema</text>
+  <text x="79" y="127" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">tables</text>
+  <line x1="144" y1="92" x2="180" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="180,88 188,92 180,96" fill="#6c63ff"/>
+  <rect x="188" y="50" width="180" height="85" rx="6" fill="#6c63ff18" stroke="#6c63ff" stroke-width="2"/>
+  <text x="278" y="75" text-anchor="middle" fill="#6c63ff" font-size="11" font-family="Inter,sans-serif" font-weight="600">Analysis Services</text>
+  <text x="278" y="93" text-anchor="middle" fill="#e2e8f0" font-size="10" font-family="Inter,sans-serif">In-memory tabular model</text>
+  <text x="278" y="110" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Pre-aggregated data</text>
+  <text x="278" y="127" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">DAX + MDX queries</text>
+  <line x1="368" y1="92" x2="406" y2="92" stroke="#6c63ff" stroke-width="1.5"/>
+  <polygon points="406,88 414,92 406,96" fill="#6c63ff"/>
+  <rect x="414" y="50" width="172" height="85" rx="6" fill="#22c55e18" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="500" y="75" text-anchor="middle" fill="#22c55e" font-size="11" font-family="Inter,sans-serif" font-weight="600">BI Clients</text>
+  <text x="500" y="93" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Power BI</text>
+  <text x="500" y="110" text-anchor="middle" fill="#e2e8f0" font-size="11" font-family="Inter,sans-serif">Excel PivotTables</text>
+  <text x="500" y="127" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="Inter,sans-serif">Sub-second queries</text>
+  <text x="300" y="162" text-anchor="middle" fill="#475569" font-size="11" font-family="Inter,sans-serif">Centralised semantic model — multiple reports share one model</text>
+</svg>`
+
+};
+
+// Map quiz question text to diagram keys (diagram shown after answering)
+const qDiagramMap = {
+  'What does ACID stand for?': 'oltp',
+  'What is ETL?': 'olap',
+  'What is ELT?': 'olap',
+  'What is batch processing?': 'batch-stream',
+  'What is stream processing?': 'batch-stream',
+  'What is a data lakehouse?': 'olap',
+  'Which file format is columnar and best for analytics?': 'file-formats',
+  'Which format adds ACID transactions to Parquet?': 'file-formats',
+  'What are the three data classifications?': 'data-formats',
+  'What is semi-structured data?': 'data-formats',
+  'What is a data lake?': 'olap',
+  'What SQL statement removes a table entirely?': 'sql-ddl-dml',
+  'Difference between DELETE and DROP TABLE?': 'sql-ddl-dml',
+  'What are DDL, DML, and DCL?': 'sql-ddl-dml',
+  'What is a primary key?': 'relational-fundamentals',
+  'What is normalisation?': 'relational-fundamentals',
+  'Which Azure SQL option is best for lift-and-shift?': 'sql-managed-instance',
+  'SQL Server on Azure VMs is which service model?': 'sql-vm',
+  'What is Azure SQL Database Serverless?': 'azure-sql-db',
+  'What are the three Blob Storage types?': 'blob-storage',
+  'Which Blob type is used for Azure VM disks?': 'blob-storage',
+  'What is an Append blob best used for?': 'blob-storage',
+  'What protocols does Azure Files support?': 'azure-files',
+  'What two keys identify a row in Azure Table Storage?': 'table-storage',
+  'What is the Cosmos DB resource hierarchy?': 'cosmos-db',
+  'Which Cosmos DB API is for graph data?': 'cosmos-apis',
+  'Which Cosmos DB API replaces Azure Table Storage?': 'cosmos-apis',
+  "What is Cosmos DB's SLA?": 'cosmos-db',
+  'What is GZRS?': 'storage-redundancy',
+  'What is LRS?': 'storage-redundancy',
+  'What are the three medallion architecture layers?': 'medallion-architecture',
+  'What is Azure Data Factory?': 'adf',
+  'What does ADLS Gen2 add to Blob Storage?': 'adls-gen2',
+  'Two SQL pools in Azure Synapse Analytics?': 'synapse-analytics',
+  'What is Azure Databricks built on?': 'databricks',
+  'What is Synapse Link?': 'synapse-analytics',
+  'Three components of Power BI?': 'power-bi',
+  'What is DAX?': 'power-bi',
+  'What is a fact table?': 'star-schema',
+  'What is SCD Type 2?': 'star-schema',
+  'What inputs does Azure Stream Analytics accept?': 'stream-analytics',
+  'What is a tumbling window in Stream Analytics?': 'stream-analytics'
+};
+
+// Inject SVG diagrams into each accordion item's body
+const accDiagKeys = {
+  'Data Formats': 'data-formats',
+  'File Formats': 'file-formats',
+  'Databases: Relational vs Non-Relational': 'databases-relnon',
+  'Transactional Processing (OLTP)': 'oltp',
+  'Analytical Processing (OLAP)': 'olap',
+  'Batch vs Stream Processing': 'batch-stream',
+  'Relational Data Fundamentals': 'relational-fundamentals',
+  'SQL: DDL, DML, DCL': 'sql-ddl-dml',
+  'Azure SQL Database (PaaS)': 'azure-sql-db',
+  'Azure SQL Managed Instance': 'sql-managed-instance',
+  'SQL Server on Azure VMs (IaaS)': 'sql-vm',
+  'SQL Clauses & JOINs': 'sql-joins',
+  'SQL Constraints, Functions & Programmability': 'sql-constraints',
+  'Azure Blob Storage': 'blob-storage',
+  'Azure Files': 'azure-files',
+  'Azure Table Storage': 'table-storage',
+  'Azure Cosmos DB': 'cosmos-db',
+  'Cosmos DB APIs': 'cosmos-apis',
+  'Storage Redundancy': 'storage-redundancy',
+  'Modern Data Warehouse Architecture': 'medallion-architecture',
+  'Azure Data Factory (ADF)': 'adf',
+  'Azure Data Lake Storage Gen2 (ADLS Gen2)': 'adls-gen2',
+  'Azure Synapse Analytics': 'synapse-analytics',
+  'Azure Databricks': 'databricks',
+  'Microsoft Fabric': 'fabric',
+  'Azure Stream Analytics': 'stream-analytics',
+  'Power BI': 'power-bi',
+  'Star Schema': 'star-schema',
+  'Azure HDInsight': 'hdinsight',
+  'Azure Analysis Services': 'analysis-services'
+};
+
+document.querySelectorAll('.acc-trigger').forEach(btn => {
+  const title = btn.textContent.trim();
+  const key = accDiagKeys[title];
+  if (key && diagrams[key]) {
+    const body = btn.nextElementSibling;
+    const div = document.createElement('div');
+    div.className = 'acc-diagram';
+    div.innerHTML = diagrams[key];
+    body.appendChild(div);
+  }
+});
 </script>
 </body>
 </html>
